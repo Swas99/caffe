@@ -232,16 +232,16 @@ message SolverParameter {
   optional bool snapshot_after_train = 28 [default = true];
 
   
-  optional float breadth_decay = 41 [default = 0.0]; // The group weight decay on each kernel.
-  optional float kernel_shape_decay = 42 [default = 0.0]; // The group weight decay on all elemements having the same coordinate in each kernel
-  optional float block_group_decay = 43 [default = 0.0]; // The group weight decay on all elemements having the same coordinate in each kernel
+  optional float breadth_decay = 941 [default = 0.0]; // The group weight decay on each kernel.
+  optional float kernel_shape_decay = 942 [default = 0.0]; // The group weight decay on all elemements having the same coordinate in each kernel
+  optional float block_group_decay = 943 [default = 0.0]; // The group weight decay on all elemements having the same coordinate in each kernel
 
-  optional float prune_threshold = 44 [default = 0.0001]; // threshold used for making certain weights to zero
-  optional float measure_threshold = 45 [default = 0.0001]; // threshold used for measuring sparsity
+  optional float prune_threshold = 944 [default = 0.0001]; // threshold used for making certain weights to zero
+  optional float measure_threshold = 945 [default = 0.0001]; // threshold used for measuring sparsity
 
-  optional float max_threshold_factor = 46 [default = 1]; // use larger threshold when partial derivative is small
+  optional float max_threshold_factor = 946 [default = 1]; // use larger threshold when partial derivative is small
   
-  optional int32 winograd_adjust_threshold = 48 [default = 1]; // 1: adjust winograd threshold based on inverse of l2 norm of columns of pinv(A), 0: no adjustment
+  optional int32 winograd_adjust_threshold = 948 [default = 1]; // 1: adjust winograd threshold based on inverse of l2 norm of columns of pinv(A), 0: no adjustment
 
   // DEPRECATED: old solver enum types, use string instead
   enum SolverType {
@@ -912,7 +912,7 @@ message InnerProductParameter {
   // but rather the transfer flag of operations will be toggled accordingly.
   optional bool transpose = 6 [default = false];
   
-  
+
   enum GemmMode {
     GEMM = 0;   //gemm on lowered tensors
     SPMDM = 1;  //sparse matrix (weights in CSR) times dense matrix (activation) multiplication
