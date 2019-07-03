@@ -127,7 +127,7 @@ __global__ void winograd_input_col2im_gpu_kernel(
   }
 }
 
-
+template <>
 void WinogradLayer<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
       const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
@@ -135,7 +135,7 @@ void WinogradLayer<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
 
 //#define PROFILE_WINOGRAD
 
-
+template <>
 void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       const vector<Blob<float>*>& top) {
 
@@ -265,13 +265,13 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
   }
 }
 
-
+template <>
 void WinogradLayer<double>::Backward_gpu(const vector<Blob<double>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<double>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 
-
+template <>
 void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<float>*>& bottom) {
 
