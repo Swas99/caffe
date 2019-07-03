@@ -5,6 +5,7 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/winograd.hpp"
 
 namespace caffe {
 
@@ -195,6 +196,79 @@ void Blob<Dtype>::Update() {
     LOG(FATAL) << "Syncedmem not initialized.";
   }
 }
+
+
+template <typename Dtype>
+Dtype Blob<Dtype>::GetSparsity(Dtype thre){
+  if (4 == num_axes() && shape(0) == shape(1) && (shape(0) == 6 || shape(0) == 8)) {
+    // winograd layer
+    int N = shape(2);
+    int C = shape(3);
+    int K = shape(0) - 4 + 1;
+
+    WinogradGKronG<Dtype> *A = WinogradGKronG<Dtype>::getInstance(K);
+    int M = A->M;
+
+    Dtype *temp = new Dtype[(N*C)*(K*K)];
+    caffe_cpu_gemm(
+        CblasTrans, CblasTrans,
+        N*C, K*K, M*M,
+        (Dtype)1, cpu_data(),
+        A->getInv()->cpu_data(),
+        (Dtype)0, temp);
+    caffe_cpu_if_zerout((N*C)*(K*K), temp, temp, thre);
+    Dtype sparsity = caffe_cpu_asum((N*C)*(K*K), temp)/(N*C*K*K);
+    delete[] temp;
+    return sparsity;
+  }
+  else {
+    int zero_num = 0;
+    for(int i=0;i<this->count();i++){
+      if( this->cpu_data()[i]<=thre && this->cpu_data()[i]>=-thre){
+        zero_num++;
+      }
+    }
+    return (Dtype)(zero_num) / (Dtype)(this->count());
+  }
+}
+
+template <typename Dtype>
+Dtype Blob<Dtype>::GetWinogradSparsity(Dtype thre){
+  if (4 == num_axes() && shape(2) == shape(3) && (shape(2) == 3 || shape(2) == 5)) {
+    int N = shape(0);
+    int C = shape(1);
+    int K = shape(2);
+
+    WinogradGKronG<Dtype> *A = WinogradGKronG<Dtype>::getInstance(K);
+    int M = A->M;
+
+    Dtype *temp = new Dtype[(N*C)*(M*M)];
+    caffe_cpu_gemm(
+        CblasNoTrans, CblasTrans,
+        N*C, M*M, K*K,
+        (Dtype)1, cpu_data(),
+        A->get()->cpu_data(),
+        (Dtype)0, temp);
+    caffe_cpu_if_zerout((N*C)*(M*M), temp, temp, thre);
+    Dtype sparsity = caffe_cpu_asum((N*C)*(M*M), temp)/(N*C*M*M);
+    delete[] temp;
+    return sparsity;
+  }
+  else if (4 == num_axes() && shape(0) == shape(1) && (shape(0) == 6 || shape(0) == 8)) {
+    // winograd layer
+    int zero_num = 0;
+    for(int i=0;i<this->count();i++){
+      if( this->cpu_data()[i]<=thre && this->cpu_data()[i]>=-thre){
+        zero_num++;
+      }
+    }
+    return (Dtype)(zero_num) / (Dtype)(this->count());
+  }
+  else {
+    return GetSparsity(thre);
+  }
+}
+
 
 template <> unsigned int Blob<unsigned int>::asum_data() const {
   NOT_IMPLEMENTED;
