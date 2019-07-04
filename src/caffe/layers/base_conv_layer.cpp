@@ -8,18 +8,6 @@
 
 namespace caffe {
 
-template <typename Dtype>
-BaseConvolutionLayer<Dtype>::BaseConvolutionLayer(const LayerParameter& param)
-    : Layer<Dtype>(param), input_padded_(NULL), output_scratch_(NULL)
-{
-  
-}
-
-template <typename Dtype>
-BaseConvolutionLayer<Dtype>::~BaseConvolutionLayer()
-{
-}
-
 bool barrier_initialized = false;
 
 template <>
