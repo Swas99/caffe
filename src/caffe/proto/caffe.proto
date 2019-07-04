@@ -699,7 +699,7 @@ message ConvolutionParameter {
   optional bool parameter_sparsity_pattern_histogram = 24 [default = false];
 }
 
-message WinogardParameter {
+message WinogradParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
 
