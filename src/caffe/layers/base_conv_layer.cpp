@@ -19,20 +19,6 @@ BaseConvolutionLayer<Dtype>::BaseConvolutionLayer(const LayerParameter& param)
 template <typename Dtype>
 BaseConvolutionLayer<Dtype>::~BaseConvolutionLayer()
 {
-  free(input_padded_);
-  free(output_scratch_);
-
-  for (int i = 0; i < weight_rowptr_.size(); ++i) {
-    free(weight_rowptr_[i]);
-    free(weight_colidx_[i]);
-    free(weight_values_[i]);
-  }
-
-  for (int i = 0; i < weight_rowptr_blocked_.size(); ++i) {
-    free(weight_rowptr_blocked_[i]);
-    free(weight_colidx_blocked_[i]);
-    free(weight_values_blocked_[i]);
-  }
 }
 
 bool barrier_initialized = false;
