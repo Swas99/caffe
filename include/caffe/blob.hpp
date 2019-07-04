@@ -24,7 +24,7 @@ template <typename Dtype>
 class Blob {
  public:
   Blob()
-       : data_(), connectivity_(), diff_(), count_(0), capacity_(0) {}
+       : data_(), diff_(), count_(0), capacity_(0) {}
 
   /// @brief Deprecated; use <code>Blob(const vector<int>& shape)</code>.
   explicit Blob(const int num, const int channels, const int height,
@@ -211,10 +211,6 @@ class Blob {
     return data_;
   }
 
-  inline const shared_ptr<SyncedMemory>& connectivity() const {
-    return connectivity_;
-  }
-  
   inline const shared_ptr<SyncedMemory>& diff() const {
     CHECK(diff_);
     return diff_;
