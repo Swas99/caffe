@@ -12,8 +12,7 @@ template <typename Dtype>
 BaseConvolutionLayer<Dtype>::BaseConvolutionLayer(const LayerParameter& param)
     : Layer<Dtype>(param), input_padded_(NULL), output_scratch_(NULL)
 {
-  //is_sparse_format_weights_ = false;
-  is_concatenating_weights_features_ = false;
+  
 }
 
 template <typename Dtype>
