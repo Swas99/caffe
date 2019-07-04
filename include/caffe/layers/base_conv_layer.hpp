@@ -17,8 +17,8 @@ namespace caffe {
 template <typename Dtype>
 class BaseConvolutionLayer : public Layer<Dtype> {
  public:
-  explicit BaseConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+  explicit BaseConvolutionLayer(const LayerParameter& param);
+  virtual ~BaseConvolutionLayer();
   virtual void WeightAlign();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
