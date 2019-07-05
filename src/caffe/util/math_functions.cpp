@@ -53,6 +53,10 @@ template <>
 void caffe_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
+template <>
+void caffe_axpy<long>(const int N, const long alpha, const long* X,
+    long* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
+
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
@@ -99,6 +103,7 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
 }
 
 template void caffe_copy<int>(const int N, const int* X, int* Y);
+template void caffe_copy<long>(const int N, const long* X, long* Y);
 template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
     unsigned int* Y);
 template void caffe_copy<float>(const int N, const float* X, float* Y);
@@ -111,6 +116,11 @@ void caffe_scal<float>(const int N, const float alpha, float *X) {
 
 template <>
 void caffe_scal<double>(const int N, const double alpha, double *X) {
+  cblas_dscal(N, alpha, X, 1);
+}
+
+template <>
+void caffe_scal<long>(const int N, const long alpha, long *X) {
   cblas_dscal(N, alpha, X, 1);
 }
 
@@ -358,6 +368,9 @@ float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
 template
 double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
+template
+long caffe_cpu_dot<long>(const int n, const long* x, const long* y);
+
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {
   return cblas_sasum(n, x, 1);
@@ -365,6 +378,11 @@ float caffe_cpu_asum<float>(const int n, const float* x) {
 
 template <>
 double caffe_cpu_asum<double>(const int n, const double* x) {
+  return cblas_dasum(n, x, 1);
+}
+
+template <>
+long caffe_cpu_asum<long>(const int n, const long* x) {
   return cblas_dasum(n, x, 1);
 }
 
