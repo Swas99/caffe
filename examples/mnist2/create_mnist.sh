@@ -3,9 +3,9 @@
 # depending on the value assigned to $BACKEND.
 set -e
 
-EXAMPLE=examples//mnist2
-DATA=data//mnist2
-BUILD=build/examples//mnist2
+EXAMPLE=examples/mnist2
+DATA=data/mnist
+BUILD=build/examples/mnist2
 
 BACKEND="lmdb"
 
