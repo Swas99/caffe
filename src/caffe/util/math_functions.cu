@@ -79,9 +79,9 @@ void caffe_gpu_axpy<long>(const int N, const long alpha, const long* X,
     long* Y);
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
-  if (X != Y) {
-    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
-  }
+//  if (X != Y) {
+//    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
+//  }
 }
 
 template <>
