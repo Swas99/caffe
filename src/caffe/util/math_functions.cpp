@@ -360,7 +360,7 @@ Dtype caffe_cpu_dot(const int n, const Dtype* x, const Dtype* y) {
   return caffe_cpu_strided_dot(n, x, 1, y, 1);
 }
 
-template <typename long>
+template <>
 long caffe_cpu_dot(const int n, const long* x, const long* y);
 
 template
