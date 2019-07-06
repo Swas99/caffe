@@ -108,11 +108,11 @@ namespace caffe {
         }
         // Special case: im2col is the identity for 1 convolution with stride 1
         // and no padding, so flag for skipping the buffer and transformation.
-        is_1_ = true;
+        is_1x1_ = true;
         for (int i = 0; i < num_spatial_axes_; ++i) {
-            is_1_ &=
+            is_1x1_ &=
                     kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0;
-            if (!is_1_) { break; }
+            if (!is_1x1_) { break; }
         }
         // Configure output channels and groups.
         channels_ = bottom[0]->shape(channel_axis_);
@@ -451,7 +451,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype *input,
                                                        const Dtype *weights, Dtype *output, bool skip_im2col) {
         const Dtype *col_buff = input;
-        if (!is_1_) {
+        if (!is_1x1_) {
             if (!skip_im2col) {
                 conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
             }
@@ -477,7 +477,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::backward_cpu_gemm(const Dtype *output,
                                                         const Dtype *weights, Dtype *input) {
         Dtype *col_buff = col_buffer_.mutable_cpu_data();
-        if (is_1_) {
+        if (is_1x1_) {
             col_buff = input;
         }
         for (int g = 0; g < group_; ++g) {
@@ -486,7 +486,7 @@ namespace caffe {
                                   (Dtype) 1., weights + weight_offset_ * g, output + output_offset_ * g,
                                   (Dtype) 0., col_buff + col_offset_ * g);
         }
-        if (!is_1_) {
+        if (!is_1x1_) {
             conv_col2im_cpu(col_buff, input);
         }
     }
@@ -495,7 +495,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype *input,
                                                       const Dtype *output, Dtype *weights) {
         const Dtype *col_buff = input;
-        if (!is_1_) {
+        if (!is_1x1_) {
             conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
             col_buff = col_buffer_.cpu_data();
         }
@@ -520,7 +520,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
         const Dtype* weights, Dtype* output, bool skip_im2col) {
       const Dtype* col_buff = input;
-      if (!is_1_) {
+      if (!is_1x1_) {
         if (!skip_im2col) {
           conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
         }
@@ -546,7 +546,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
         const Dtype* weights, Dtype* input) {
       Dtype* col_buff = col_buffer_.mutable_gpu_data();
-      if (is_1_) {
+      if (is_1x1_) {
         col_buff = input;
       }
       for (int g = 0; g < group_; ++g) {
@@ -555,7 +555,7 @@ namespace caffe {
             (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
             (Dtype)0., col_buff + col_offset_ * g);
       }
-      if (!is_1_) {
+      if (!is_1x1_) {
         conv_col2im_gpu(col_buff, input);
       }
     }
@@ -564,7 +564,7 @@ namespace caffe {
     void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
         const Dtype* output, Dtype* weights) {
       const Dtype* col_buff = input;
-      if (!is_1_) {
+      if (!is_1x1_) {
         conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
         col_buff = col_buffer_.gpu_data();
       }
