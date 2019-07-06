@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "caffe/layers/conv_layer.hpp"
+#include <stdio>
 
 namespace caffe {
 
@@ -20,11 +21,14 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       }
     }
   }
+
+  printf("Forward");
 }
 
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+      printf("Backward_gpu");
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
   for (int i = 0; i < top.size(); ++i) {
