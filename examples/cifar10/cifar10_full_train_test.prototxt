@@ -47,7 +47,7 @@ layer {
   convolution_param {
     num_output: 32
     pad: 2
-    kernel_size: 5
+    kernel_size: 3
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -101,7 +101,7 @@ layer {
   convolution_param {
     num_output: 32
     pad: 2
-    kernel_size: 5
+    kernel_size: 3
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -149,7 +149,7 @@ layer {
   convolution_param {
     num_output: 64
     pad: 2
-    kernel_size: 5
+    kernel_size: 3
     stride: 1
     weight_filler {
       type: "gaussian"
