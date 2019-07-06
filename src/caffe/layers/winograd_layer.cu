@@ -139,7 +139,7 @@ template <>
 void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       const vector<Blob<float>*>& top) {
 
-  int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
+  int kernel_h = this->kernel_shape_.gpu_data()[0], kernel_w = this->kernel_shape_.gpu_data()[1];
 
   WinogradAKronA<float> *AKronA = WinogradAKronA<float>::getInstance(kernel_h);
   WinogradBKronB<float> *BKronB = WinogradBKronB<float>::getInstance(kernel_h);
@@ -157,8 +157,8 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
 
     int M = this->conv_in_channels_*ntiles_h_*ntiles_w_;
     int num_kernels = this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_in_*tile_w_in_;
-    int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
-    int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
+    int height = this->conv_input_shape_.gpu_data()[1], width = this->conv_input_shape_.gpu_data()[2];
+    int pad_h = this->pad_.gpu_data()[0], pad_w = this->pad_.gpu_data()[1];
 
 #ifdef PROFILE_WINOGRAD
     timer.Start();
@@ -202,7 +202,7 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       int K = this->conv_in_channels_/this->group_;
 
       if (!weight_ptrs_initialized_) {
-        float **weight_ptrs = (float **)weight_ptrs_->mutable_cpu_data();
+        float **weight_ptrs = (float **)weight_ptrs_->mutable_gpu_data();
         for (int j = 0; j < tile_h_in_*tile_w_in_*this->group_; ++j) {
           weight_ptrs[j] = 
             this->blobs_[0]->mutable_gpu_data() +
@@ -275,7 +275,7 @@ template <>
 void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<float>*>& bottom) {
 
-  int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
+  int kernel_h = this->kernel_shape_.gpu_data()[0], kernel_w = this->kernel_shape_.gpu_data()[1];
 
   WinogradAKronA<float> *AKronA = WinogradAKronA<float>::getInstance(kernel_h);
   WinogradBKronB<float> *BKronB = WinogradBKronB<float>::getInstance(kernel_h);
@@ -284,7 +284,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
   const float* weight = this->blobs_[0]->gpu_data();
   float* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 
-	/*const float *weight_cpu = this->blobs_[0]->cpu_data();
+	/*const float *weight_cpu = this->blobs_[0]->gpu_data();
   fprintf(stderr, "weight_winograd\n");
   for (int j = 0; j < tile_h_in_*tile_w_in_; ++j) {
     for (int n = 0; n < this->conv_out_channels_; ++n) {
@@ -314,8 +314,8 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
       int M = this->conv_out_channels_*ntiles_h_*ntiles_w_;
       int num_kernels = this->num_*this->conv_out_channels_*ntiles_h_*ntiles_w_*tile_h_out_*tile_w_out_;
       const int output_h = this->output_shape_[0], output_w = this->output_shape_[1];
-      const int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
-      const int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
+      const int height = this->conv_input_shape_.gpu_data()[1], width = this->conv_input_shape_.gpu_data()[2];
+      const int pad_h = this->pad_.gpu_data()[0], pad_w = this->pad_.gpu_data()[1];
 
 #ifdef PROFILE_WINOGRAD
       timer.Start();
@@ -384,7 +384,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
         timer.Start();
 #endif
         if (!weight_diff_ptrs_initialized_) {
-          float **weight_diff_ptrs = (float **)weight_diff_ptrs_->mutable_cpu_data();
+          float **weight_diff_ptrs = (float **)weight_diff_ptrs_->mutable_gpu_data();
           for (int j = 0; j < tile_h_in_*tile_w_in_*this->group_; ++j) {
             weight_diff_ptrs[j] =
               this->blobs_[0]->mutable_gpu_diff() +
