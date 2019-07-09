@@ -590,15 +590,15 @@ public :
       b[zero_cnt + i] = weight_inout[i];
     }
 
-    lapack_int info = LAPACKE_dgels(
-        LAPACK_ROW_MAJOR, 'N',
-        zero_cnt + N*N, N*N,
-        1,
-        A_temp, N*N,
-        b, 1);
-    if (info != 0) {
-      LOG(FATAL) << "dgels failed with return value " << info;
-    }
+    // lapack_int info = LAPACKE_dgels(
+    //     LAPACK_ROW_MAJOR, 'N',
+    //     zero_cnt + N*N, N*N,
+    //     1,
+    //     A_temp, N*N,
+    //     b, 1);
+    // if (info != 0) {
+    //   LOG(FATAL) << "dgels failed with return value " << info;
+    // }
 
     for (int i = 0; i < N*N; ++i) {
       weight_inout[i] = b[i];
