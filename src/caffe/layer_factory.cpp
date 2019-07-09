@@ -41,8 +41,8 @@ namespace caffe {
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetWinogradLayer(
     const LayerParameter& param) {
-  WinogradParameter conv_param = param.winograd_param();
-  WinogradParameter_Engine engine = conv_param.engine();
+   ConvolutionParameter conv_param = param.convolution_param();
+  ConvolutionParameter_Engine engine = conv_param.engine();
 #ifdef USE_CUDNN
   bool use_dilation = false;
   for (int i = 0; i < conv_param.dilation_size(); ++i) {
@@ -51,18 +51,18 @@ shared_ptr<Layer<Dtype> > GetWinogradLayer(
     }
   }
 #endif
-  if (engine == WinogradParameter_Engine_DEFAULT) {
-    engine = WinogradParameter_Engine_CAFFE;
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+    engine = ConvolutionParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     if (!use_dilation) {
-      engine = WinogradParameter_Engine_CUDNN;
+      engine = ConvolutionParameter_Engine_CUDNN;
     }
 #endif
   }
-  if (engine == WinogradParameter_Engine_CAFFE) {
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype> >(new WinogradLayer<Dtype>(param));
 #ifdef USE_CUDNN
-  } else if (engine == WinogradParameter_Engine_CUDNN) {
+  } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (use_dilation) {
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
