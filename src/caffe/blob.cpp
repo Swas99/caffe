@@ -5,7 +5,7 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/util/winograd.hpp"
+// #include "caffe/util/winograd.hpp"
 
 namespace caffe {
 
