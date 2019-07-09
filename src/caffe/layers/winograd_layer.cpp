@@ -561,6 +561,6 @@ STUB_GPU(WinogradLayer);
 #endif
 
 INSTANTIATE_CLASS(WinogradLayer);
-REGISTER_LAYER_CLASS(Winograd);
+// REGISTER_LAYER_CLASS(Winograd);
 
 }  // namespace caffe
