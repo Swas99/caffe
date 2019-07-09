@@ -143,7 +143,7 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
 
   WinogradAKronA<float> *AKronA = WinogradAKronA<float>::getInstance(kernel_h);
   WinogradBKronB<float> *BKronB = WinogradBKronB<float>::getInstance(kernel_h);
-  WinogradGKronG<float> *GKronG = WinogradGKronG<float>::getInstance(kernel_h);
+  //WinogradGKronG<float> *GKronG = WinogradGKronG<float>::getInstance(kernel_h);
 
   const float* weight = this->blobs_[0]->gpu_data();
 
@@ -279,7 +279,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
 
   WinogradAKronA<float> *AKronA = WinogradAKronA<float>::getInstance(kernel_h);
   WinogradBKronB<float> *BKronB = WinogradBKronB<float>::getInstance(kernel_h);
-  WinogradGKronG<float> *GKronG = WinogradGKronG<float>::getInstance(kernel_h);
+  //WinogradGKronG<float> *GKronG = WinogradGKronG<float>::getInstance(kernel_h);
 
   const float* weight = this->blobs_[0]->gpu_data();
   float* weight_diff = this->blobs_[0]->mutable_gpu_diff();
