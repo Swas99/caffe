@@ -44,27 +44,27 @@ template <typename Dtype>
 void WinogradLayer<Dtype>::WeightAlign() {
   BaseConvolutionLayer<Dtype>::WeightAlign();
 
-  WeightAlignLocal();
+  // WeightAlignLocal();
 }
 
-template <typename Dtype>
-void WinogradLayer<Dtype>::WeightAlignLocal() {
-  if (!IsReshapedToWinograd()) {
-    // transform weights to Winograd domain
-    Dtype* weight_orig = new Dtype[this->blobs_[0]->count()];
-    memcpy(weight_orig, this->blobs_[0]->cpu_data(), sizeof(Dtype)*this->blobs_[0]->count());
+// template <typename Dtype>
+// void WinogradLayer<Dtype>::WeightAlignLocal() {
+//   if (!IsReshapedToWinograd()) {
+//     // transform weights to Winograd domain
+//     Dtype* weight_orig = new Dtype[this->blobs_[0]->count()];
+//     memcpy(weight_orig, this->blobs_[0]->cpu_data(), sizeof(Dtype)*this->blobs_[0]->count());
 
-    ReshapeToWinograd();
+//     ReshapeToWinograd();
 
-    int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
-    WinogradGKronG<Dtype> *GKronG = WinogradGKronG<Dtype>::getInstance(kernel_h);
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
-        tile_h_in_*tile_w_in_, (this->conv_in_channels_/this->group_)*this->conv_out_channels_, kernel_h*kernel_w,
-        (Dtype)1, GKronG->get()->cpu_data(), weight_orig,
-        (Dtype)0, this->blobs_[0]->mutable_cpu_data());
-    delete[] weight_orig;
-  }
-}
+//     int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
+//     WinogradGKronG<Dtype> *GKronG = WinogradGKronG<Dtype>::getInstance(kernel_h);
+//     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
+//         tile_h_in_*tile_w_in_, (this->conv_in_channels_/this->group_)*this->conv_out_channels_, kernel_h*kernel_w,
+//         (Dtype)1, GKronG->get()->cpu_data(), weight_orig,
+//         (Dtype)0, this->blobs_[0]->mutable_cpu_data());
+//     delete[] weight_orig;
+//   }
+// }
 
 template <typename Dtype>
 void WinogradLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -136,7 +136,7 @@ void WinogradLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     weight_diff_ptrs_initialized_ = false;
   }
 
-  WeightAlignLocal();
+  // WeightAlignLocal();
 }
 
 template<typename Dtype>
