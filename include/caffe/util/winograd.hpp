@@ -494,17 +494,17 @@ public :
       double A_temp[(M*M)*(N*N)];
       memcpy(A_temp, WinogradGKronG<double>::getInstance(K)->get()->cpu_data(), sizeof(A_temp));
       // NOTE: A_temp will be overwritten by LAPACKE_dgesvd
-      MKL_INT info = LAPACKE_dgesvd(
-        LAPACK_ROW_MAJOR, 'S', 'A',
-        M*M, N*N,
-        A_temp, N*N,
-        S,
-        U, N*N,
-        VT, N*N,
-        superb);
-      if (info > 0) {
-        LOG(FATAL) << "SVD failed to converge with return value " << info;
-      }
+      // MKL_INT info = LAPACKE_dgesvd(
+      //   LAPACK_ROW_MAJOR, 'S', 'A',
+      //   M*M, N*N,
+      //   A_temp, N*N,
+      //   S,
+      //   U, N*N,
+      //   VT, N*N,
+      //   superb);
+      // if (info > 0) {
+      //   LOG(FATAL) << "SVD failed to converge with return value " << info;
+      // }
 
       double S_pinv[(N*N)*(N*N)];
       memset(S_pinv, 0, sizeof(S_pinv));
