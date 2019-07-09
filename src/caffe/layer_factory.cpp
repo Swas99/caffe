@@ -37,7 +37,7 @@
 
 namespace caffe {
 
-Get Winograd Conv layer according to engine.
+//Get Winograd Conv layer according to engine.
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetWinogradLayer(
     const LayerParameter& param) {
