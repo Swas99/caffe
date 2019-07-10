@@ -60,14 +60,14 @@ shared_ptr<Layer<Dtype> > GetWinogradLayer(
 #endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new WinogradLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (use_dilation) {
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
