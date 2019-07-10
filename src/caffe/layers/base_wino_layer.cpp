@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+#include <stdio.h>
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/base_wino_layer.hpp"
@@ -463,7 +464,10 @@ namespace caffe {
 
         if (kernel_h != 3 || kernel_w != 3) {
             printf("%d : %d\n",kernel_h, kernel_w);
-            LOG(FATAL) << "kernel size must be 3";
+            # if __CUDA_ARCH__>=200
+                printf("%d : %d\n",kernel_h, kernel_w);
+            #endif  
+            // LOG(FATAL) << "kernel size must be 3";
         }
         // if (pad_h>4||pad_w>4)
         // {
