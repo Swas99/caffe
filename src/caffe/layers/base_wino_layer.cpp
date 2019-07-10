@@ -555,8 +555,8 @@ namespace caffe {
                 }
             }
         }
-        // free(padded_out);
-        // free(padded_input);
+        cudaFree(padded_out);
+        cudaFree(padded_input);
     }
 
     template<typename Dtype>
