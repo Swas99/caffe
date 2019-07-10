@@ -1,11 +1,11 @@
 #include <vector>
 
-#include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/wino_layer.hpp"
 
 namespace caffe {
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::compute_output_shape() {
+    void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.cpu_data();
         const int *stride_data = this->stride_.cpu_data();
         const int *pad_data = this->pad_.cpu_data();
@@ -22,7 +22,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
+    void WinogradLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const Dtype *weight = this->blobs_[0]->cpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
@@ -47,7 +47,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype> *> &top,
+    void WinogradLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
         const Dtype *weight = this->blobs_[0]->cpu_data();
@@ -82,9 +82,9 @@ namespace caffe {
 
 #ifdef CPU_ONLY
 
-    STUB_GPU(ConvolutionLayer);
+    STUB_GPU(WinogradLayer);
 #endif
 
-    INSTANTIATE_CLASS(ConvolutionLayer);
+    INSTANTIATE_CLASS(WinogradLayer);
 
 }  // namespace caffe

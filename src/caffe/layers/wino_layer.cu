@@ -1,11 +1,11 @@
 #include <vector>
 
-#include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/wino_layer.hpp"
 
 namespace caffe {
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::compute_output_shape() {
+    void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         const int *stride_data = this->stride_.gpu_data();
         const int *pad_data = this->pad_.gpu_data();
@@ -22,7 +22,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+    void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const Dtype *weight = this->blobs_[0]->gpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
@@ -49,7 +49,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top,
+    void WinogradLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
         const Dtype *weight = this->blobs_[0]->gpu_data();
@@ -82,6 +82,6 @@ namespace caffe {
         }
     }
 
-    INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayer);
+    INSTANTIATE_LAYER_GPU_FUNCS(WinogradLayer);
 
 }  // namespace caffe
