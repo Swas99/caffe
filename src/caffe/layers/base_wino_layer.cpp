@@ -452,10 +452,10 @@ namespace caffe {
         int input_h      = conv_input_shape_.gpu_data()[1];
         int input_w      = conv_input_shape_.gpu_data()[2];
         int kernel_h     = kernel_shape_.gpu_data()[0];
-        // int kernel_w     = kernel_shape_.gpu_data()[1];
-        // int pad_h        = pad_.gpu_data()[0];
-        // int pad_w        = pad_.gpu_data()[1];
-        // int stride_h     = stride_.gpu_data()[0];
+        int kernel_w     = kernel_shape_.gpu_data()[1];
+        int pad_h        = pad_.gpu_data()[0];
+        int pad_w        = pad_.gpu_data()[1];
+        int stride_h     = stride_.gpu_data()[0];
         // int stride_w     = stride_.gpu_data()[1];
         // int dilation_h   = dilation_.gpu_data()[0];
         // int dilation_w   = dilation_.gpu_data()[1];
