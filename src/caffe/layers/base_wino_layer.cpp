@@ -464,14 +464,14 @@ namespace caffe {
         if (kernel_h != 3 || kernel_w != 3) {
             LOG(FATAL) << "kernel size must be 3";
         }
-        if (pad_h>4||pad_w>4)
-        {
-            LOG(FATAL) << "padding must less than 4";
-        }
+        // if (pad_h>4||pad_w>4)
+        // {
+        //     LOG(FATAL) << "padding must less than 4";
+        // }
 
-        if (group_ > 1) {
-            LOG(FATAL) << "multi Groups not implemented ";
-        }
+        // if (group_ > 1) {
+        //     LOG(FATAL) << "multi Groups not implemented ";
+        // }
 
         // Dtype weight[3][3];  //kernel weight
         // Dtype in[6][6]; //input tile
