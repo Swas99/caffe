@@ -480,7 +480,7 @@ namespace caffe {
         const int output_w = (input_w + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
         const int channel_size = input_h * input_w;
         const int out_channel_size = output_h*output_w;
-        memset(output,0, sizeof(Dtype)*output_h*output_w*out_channels);
+        cudaMemset(output,0, sizeof(Dtype)*output_h*output_w*out_channels);
 
         // parameters of padding and tiling
         int tile_num_w = (input_w + 2 * pad_w-6) / 4 + ((input_w + 2 * pad_w-6) % 4 > 0 ? 1 : 0)+1;
@@ -493,12 +493,16 @@ namespace caffe {
         int padded_channel_size     = padded_in_h*padded_in_w;
         int padded_out_channel_size = padded_out_w*padded_out_h;
 
+        
+        // cudaMalloc((void**)&dJunk, sz);
+        // cudaMemset(dJunk, 0, sz);
+        
         Dtype*padded_out = (Dtype*)malloc(padded_out_channel_size*out_channels* sizeof(Dtype));
-        memset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
-
+        cudaMemset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
+        
         //pad 0
         Dtype* padded_input = (Dtype*)malloc(in_channels*padded_channel_size* sizeof(Dtype));
-        memset(padded_input,0, sizeof(Dtype)*in_channels*padded_channel_size);
+        cudaMemset(padded_input,0, sizeof(Dtype)*in_channels*padded_channel_size);
 
         //copy input to padded_input
         for (int c=0;c<in_channels;c++)
