@@ -67,7 +67,7 @@ shared_ptr<Layer<Dtype> > GetWinogradLayer(
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new WinogradLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
