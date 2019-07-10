@@ -446,7 +446,7 @@ namespace caffe {
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
         
-        forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,top_data + n * this->top_dim_);
+        forward_gpu_gemm(input, weight,output);
         // kernel_dim_;
         // int in_channels  = conv_in_channels_;
         // int out_channels = conv_out_channels_;
