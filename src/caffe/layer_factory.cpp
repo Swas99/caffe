@@ -68,7 +68,7 @@ shared_ptr<Layer<Dtype> > GetWinogradLayer(
                  << param.name();
     }
     return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
-#endifyhufi nj8967c
+#endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
     throw;  // Avoids missing return warning
