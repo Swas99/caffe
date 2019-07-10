@@ -481,7 +481,7 @@ namespace caffe {
         Dtype weight[3][3];  //kernel weight
         Dtype in[6][6]; //input tile
         Dtype out_tile[4][4]; //out put tile
-        // cudaMemset(output,0, input_h);
+        cudaMemset(output,0, input_h);
         // cudaMemset(output,0, pad_h);
         // cudaMemset(output,0, dilation_h);
         // cudaMemset(output,0, kernel_h);
