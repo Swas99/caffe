@@ -469,14 +469,14 @@ namespace caffe {
         {
             // printf("%d : %d\n",kernel_h, kernel_w);
         }
-        // if (pad_h>4||pad_w>4)
-        // {
-        //     LOG(FATAL) << "padding must less than 4";
-        // }
+        if (pad_h>4||pad_w>4)
+        {
+            // LOG(FATAL) << "padding must less than 4";
+        }
 
-        // if (group_ > 1) {
-        //     LOG(FATAL) << "multi Groups not implemented ";
-        // }
+        if (group_ > 1) {
+            // LOG(FATAL) << "multi Groups not implemented ";
+        }
 
         Dtype weight[3][3];  //kernel weight
         Dtype in[6][6]; //input tile
@@ -485,7 +485,7 @@ namespace caffe {
         const int output_w = (input_w + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
         const int channel_size = input_h * input_w;
         const int out_channel_size = output_h*output_w;
-        cudaMemset(output,0, output_h*output_w*out_channels);
+        cudaMemset(output,0, out_channels);
 
         // // parameters of padding and tiling
         // int tile_num_w = (input_w + 2 * pad_w-6) / 4 + ((input_w + 2 * pad_w-6) % 4 > 0 ? 1 : 0)+1;
