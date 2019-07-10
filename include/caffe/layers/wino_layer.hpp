@@ -79,6 +79,8 @@ protected:
     virtual void Backward_gpu(const vector<Blob<Dtype> *> &top,
                               const vector<bool> &propagate_down, const vector<Blob<Dtype> *> &bottom);
 
+    virtual void forward_gpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
+
     virtual inline bool reverse_dimensions() { return false; }
 
     virtual void compute_output_shape();
