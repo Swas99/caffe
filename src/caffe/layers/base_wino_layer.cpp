@@ -451,7 +451,7 @@ namespace caffe {
         int out_channels = conv_out_channels_;
         int input_h      = conv_input_shape_.gpu_data()[1];
         int input_w      = conv_input_shape_.gpu_data()[2];
-        // int kernel_h     = kernel_shape_.gpu_data()[0];
+        int kernel_h     = kernel_shape_.gpu_data()[0];
         // int kernel_w     = kernel_shape_.gpu_data()[1];
         // int pad_h        = pad_.gpu_data()[0];
         // int pad_w        = pad_.gpu_data()[1];
