@@ -449,29 +449,29 @@ namespace caffe {
         kernel_dim_;
         int in_channels  = conv_in_channels_;
         int out_channels = conv_out_channels_;
-        int input_h      = conv_input_shape_.gpu_data()[1];
-        int input_w      = conv_input_shape_.gpu_data()[2];
-        int kernel_h     = kernel_shape_.gpu_data()[0];
-        int kernel_w     = kernel_shape_.gpu_data()[1];
-        int pad_h        = pad_.gpu_data()[0];
-        int pad_w        = pad_.gpu_data()[1];
-        int stride_h     = stride_.gpu_data()[0];
-        int stride_w     = stride_.gpu_data()[1];
-        int dilation_h   = dilation_.gpu_data()[0];
-        int dilation_w   = dilation_.gpu_data()[1];
-        int kernel_size  = kernel_h * kernel_w;
+        // int input_h      = conv_input_shape_.gpu_data()[1];
+        // int input_w      = conv_input_shape_.gpu_data()[2];
+        // int kernel_h     = kernel_shape_.gpu_data()[0];
+        // int kernel_w     = kernel_shape_.gpu_data()[1];
+        // int pad_h        = pad_.gpu_data()[0];
+        // int pad_w        = pad_.gpu_data()[1];
+        // int stride_h     = stride_.gpu_data()[0];
+        // int stride_w     = stride_.gpu_data()[1];
+        // int dilation_h   = dilation_.gpu_data()[0];
+        // int dilation_w   = dilation_.gpu_data()[1];
+        // int kernel_size  = kernel_h * kernel_w;
 
-        if (kernel_h != 3 || kernel_w != 3) {
-            LOG(FATAL) << "kernel size must be 3";
-        }
-        if (pad_h>4||pad_w>4)
-        {
-            LOG(FATAL) << "padding must less than 4";
-        }
+        // if (kernel_h != 3 || kernel_w != 3) {
+        //     LOG(FATAL) << "kernel size must be 3";
+        // }
+        // if (pad_h>4||pad_w>4)
+        // {
+        //     LOG(FATAL) << "padding must less than 4";
+        // }
 
-        if (group_ > 1) {
-            LOG(FATAL) << "multi Groups not implemented ";
-        }
+        // if (group_ > 1) {
+        //     LOG(FATAL) << "multi Groups not implemented ";
+        // }
 
         // Dtype weight[3][3];  //kernel weight
         // Dtype in[6][6]; //input tile
