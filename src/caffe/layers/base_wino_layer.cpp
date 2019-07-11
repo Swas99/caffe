@@ -582,7 +582,7 @@ namespace caffe {
                 for (int w=0;w<input_w;w++)
                 {
                      padded_input[c*padded_channel_size+padded_in_w*(h+pad_h)+w+pad_w]
-                     = input[c*channel_size+h*input_w+w];
+                     input[c*channel_size+h*input_w+w];
                 }
 
         //copy input to padded_input
