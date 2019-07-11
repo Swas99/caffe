@@ -533,12 +533,13 @@ namespace caffe {
         int dilation_w   = dilation_.gpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
+        printf("%d : %d\n",kernel_h, kernel_w);
         if (kernel_h != 3 || kernel_w != 3) {
             // LOG(FATAL) << "kernel size must be 3";
         }
         else
         {
-            // printf("%d : %d\n",kernel_h, kernel_w);
+            
         }
         if (pad_h>4||pad_w>4)
         {
