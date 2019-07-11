@@ -62,10 +62,10 @@ namespace caffe {
         void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
             weights);
         void backward_gpu_bias(Dtype* bias, const Dtype* input);
-        void get_input_width(int &out)
-        void get_input_height(int &out)
-        void get_pad_width(int &out)
-        void get_pad_height(int &out)
+        void get_input_width(int &out);
+        void get_input_height(int &out);
+        void get_pad_width(int &out);
+        void get_pad_height(int &out);
         
 #endif
 
