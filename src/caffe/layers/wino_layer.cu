@@ -203,6 +203,7 @@ namespace caffe {
             this->get_pad_width(pad_w);
             this->get_conv_in_channels(C);
             printf("B: %d \n", this->num_);
+            printf("C: %d \n", C);
             printf("input_h: %d \n", H);
             printf("input_w: %d \n", W);
             printf("pad_h: %d \n", pad_h);
