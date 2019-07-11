@@ -644,7 +644,7 @@ namespace caffe {
     void BaseWinogradLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
         const Dtype* weights, Dtype* output, bool skip_im2col) {
       
-      forward_gpu_winograd(input, weights,output);
+      forward_cpu_winograd(input, weights,output);
       // const Dtype* col_buff = input;
       // if (!is_1x1_) {
       //   if (!skip_im2col) {
