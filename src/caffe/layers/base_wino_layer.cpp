@@ -354,6 +354,10 @@ namespace caffe {
         int dilation_w   = dilation_.cpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
+        printf("input_h: %d \n", input_h);
+        printf("input_w: %d \n", input_w);
+        printf("pad_h: %d \n", pad_h);
+        printf("pad_w: %d \n", pad_w);
 
         if (kernel_h != 3 || kernel_w != 3) {
             LOG(FATAL) << "kernel size must be 3";
