@@ -174,6 +174,8 @@ namespace caffe {
         cudaMemset(wTransInput,0, 16* B* n_patch_height * n_patch_width * C* sizeof(Dtype));
         
         Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+
+        cudaFree(wTransInput);
     }
 
     template<typename Dtype>
