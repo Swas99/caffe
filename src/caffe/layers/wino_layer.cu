@@ -153,12 +153,13 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
     } 
 
-    void Winograd2x2ImTransComputeLauncher(const float *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
+    template<typename Dtype>
+    void Winograd2x2ImTransComputeLauncher(const Dtype *Input, Dtype *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
         int n_patch_width = (W + 1 + 2 * pad_w - 4) / 2 + 1;
         int n_patch_height = (H + 1 + 2 * pad_h - 4) / 2 + 1;
         dim3 blockDim(C, 1, 1);
         dim3 gridDim(n_patch_width, n_patch_height, B);
-        Winograd2x2ImTransCompute<float><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
+        Winograd2x2ImTransCompute<Dtype><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
     }
 
 
@@ -209,7 +210,8 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
     Output[bz*H*W*K + (2*by+1)*W*K + (2*bx+1)*K + tx] = output_patch_3;
 } 
 
-__global__ void assign(const float *Input, const float *Weight, float *tmp_data_buffer, const float **Input_ptrs_gpu, const float **Weight_ptrs_gpu, float **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
+template<typename Dtype>
+__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const Dtype **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
     int tx = threadIdx.x; // 16
     
     Input_ptrs_gpu[tx] = Input + tx * B * nH * nW * C;
@@ -219,7 +221,8 @@ __global__ void assign(const float *Input, const float *Weight, float *tmp_data_
 
 // Input = (16, B, nH, nW, C)
 // Weight = (16, C, K)
-void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, float *Output, float *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
+template<typename Dtype>
+void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dtype *Output, Dtype *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
 
     const float** Input_ptrs_gpu_ = (const float **)(tmp_ptr_buffer);
     const float** Weight_ptrs_gpu_ = (const float **)(tmp_ptr_buffer + 16);
@@ -229,8 +232,8 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     dim3 gDim(1, 1, 1);
     assign <<<gDim, bDim>>> (Input, Weight, tmp_data_buffer, Input_ptrs_gpu_, Weight_ptrs_gpu_, tmp_product_ptrs_gpu_, C, B, nH, nW, K);
     
-    float one = 1;
-    float zero = 0;
+    Dtype one = 1;
+    Dtype zero = 0;
 
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -243,33 +246,34 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
     dim3 blockDim2(K, 1, 1);
     dim3 gridDim2(nW, nH, B);
-    Output_transform <float> <<<gridDim2, blockDim2>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
+    Output_transform <Dtype> <<<gridDim2, blockDim2>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
 
     cublasDestroy(handle);
 }
 
 
-    void xxx(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    template<typename Dtype>
+    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
         // kernel_dim_; 
 
         int nW = (W + 1) / 2;
         int nH = (H + 1) / 2;
-        float *wTransInput;
-        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
-        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
+        Dtype *wTransInput;
+        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(Dtype));
+        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(Dtype));
         
         Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
 
 
 
-        float *Output;
-        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(float));
-        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(float));    
+        Dtype *Output;
+        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(Dtype));
+        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(Dtype));    
 
         // Allocate temporary memory
-        float *tmp_data_buffer_tensor;
-        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
+        Dtype *tmp_data_buffer_tensor;
+        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(Dtype));
         
         long long *tmp_ptr_buffer_tensor;
         cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
@@ -302,13 +306,13 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         }
     }
 
-    template<typename float>
-    void WinogradLayer<float>::Forward_gpu(const vector<Blob<float> *> &bottom,
-                                              const vector<Blob<float> *> &top) {
-        const float *weight = this->blobs_[0]->gpu_data();
+    template<typename Dtype>
+    void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+                                              const vector<Blob<Dtype> *> &top) {
+        const Dtype *weight = this->blobs_[0]->gpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
-            const float *bottom_data = bottom[i]->gpu_data();
-            float *top_data = top[i]->mutable_gpu_data();
+            const Dtype *bottom_data = bottom[i]->gpu_data();
+            Dtype *top_data = top[i]->mutable_gpu_data();
 
 
             int H,W,pad_h,pad_w,C;
@@ -347,17 +351,11 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             //    }
 
             //    if (this->bias_term_) {
-            //        const float *bias = this->blobs_[1]->gpu_data();
+            //        const Dtype *bias = this->blobs_[1]->gpu_data();
             //        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
             //    }
             //}
         }
-    }
-
-    template<typename double>
-    void WinogradLayer<double>::Forward_gpu(const vector<Blob<double> *> &bottom,
-                                              const vector<Blob<double> *> &top) {
-        
     }
 
     template<typename Dtype>
