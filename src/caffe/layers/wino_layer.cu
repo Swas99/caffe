@@ -210,6 +210,7 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
     Output[bz*H*W*K + (2*by+1)*W*K + (2*bx+1)*K + tx] = output_patch_3;
 } 
 
+template<typename Dtype>
 __global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const Dtype **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
     int tx = threadIdx.x; // 16
     
@@ -220,6 +221,7 @@ __global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_
 
 // Input = (16, B, nH, nW, C)
 // Weight = (16, C, K)
+template<typename Dtype>
 void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dtype *Output, Dtype *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
 
     const Dtype** Input_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer);
