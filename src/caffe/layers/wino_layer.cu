@@ -165,7 +165,7 @@ namespace caffe {
          
         // kernel_dim_; 
 
-         //Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w);
+        Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w);
     }
 
     template<typename Dtype>
