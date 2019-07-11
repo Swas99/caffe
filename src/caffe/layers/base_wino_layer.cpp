@@ -515,6 +515,18 @@ namespace caffe {
 
 
 
+namespace detail
+{
+    template<typename T, typename CharT, typename Traits>
+    std::basic_ostream<CharT, Traits> &
+    operator<<(std::basic_ostream<CharT, Traits> &os, const T &)
+    {
+        const char s[] = "<unknown-type>";
+        os.write(s, sizeof(s));
+        return os;
+    }
+}
+
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
         
@@ -726,15 +738,3 @@ namespace caffe {
     INSTANTIATE_CLASS(BaseWinogradLayer);
 
 }  // namespace caffe
-
-namespace detail
-{
-    template<typename T, typename CharT, typename Traits>
-    std::basic_ostream<CharT, Traits> &
-    operator<<(std::basic_ostream<CharT, Traits> &os, const T &)
-    {
-        const char s[] = "<unknown-type>";
-        os.write(s, sizeof(s));
-        return os;
-    }
-}
