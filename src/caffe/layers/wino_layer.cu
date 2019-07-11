@@ -153,7 +153,7 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
     } 
 
-    void Winograd2x2ImTransComputeLauncher(const Dtype *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
+    void Winograd2x2ImTransComputeLauncher(const float *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
         int n_patch_width = (W + 1 + 2 * pad_w - 4) / 2 + 1;
         int n_patch_height = (H + 1 + 2 * pad_h - 4) / 2 + 1;
         dim3 blockDim(C, 1, 1);
@@ -285,7 +285,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     
     }
 
-
+    template<typename Dtype>
     void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         const int *stride_data = this->stride_.gpu_data();
