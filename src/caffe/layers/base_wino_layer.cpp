@@ -568,7 +568,7 @@ namespace caffe {
 
         // Dtype*padded_out = (Dtype*)malloc(padded_out_channel_size*out_channels* sizeof(Dtype));
         Dtype*padded_out;
-        cudaMalloc(&padded_out, padded_out_channel_size*out_channels* sizeof(Dtype))
+        cudaMalloc(&padded_out, padded_out_channel_size*out_channels* sizeof(Dtype));
         cudaMemset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
 
         // //pad 0
