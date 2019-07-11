@@ -594,7 +594,7 @@ namespace caffe {
                                 for (int i = 0; i < kernel_w; i++) {
                                     for (int j = 0; j < kernel_h; j++)
                                     {
-                                        weight[i][j] = *(weights + out_channel * in_channels * kernel_size + in_channel * 3*3 + j * 3 + i);
+                                        // weight[i][j] = *(weights + out_channel * in_channels * kernel_size + in_channel * 3*3 + j * 3 + i);
                                     }
                                 }
 
@@ -618,7 +618,7 @@ namespace caffe {
                     {
                         for (int h=0;h<output_h;h++)
                         {
-                            *(output+out_channel*out_channel_size+h*output_w+w) = *(padded_out+out_channel*padded_out_channel_size+h*padded_out_w+w);
+                            // *(output+out_channel*out_channel_size+h*output_w+w) = *(padded_out+out_channel*padded_out_channel_size+h*padded_out_w+w);
                         }
                     }
                 }
