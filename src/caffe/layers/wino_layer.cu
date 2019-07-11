@@ -28,6 +28,10 @@ namespace caffe {
         for (int i = 0; i < bottom.size(); ++i) {
             const Dtype *bottom_data = bottom[i]->gpu_data();
             Dtype *top_data = top[i]->mutable_gpu_data();
+
+
+            xxx(bottom_data, weight, top_data, n);
+
             for (int n = 0; n < this->num_; ++n) {
                 const int *kernel_shape_data = this->kernel_shape_.gpu_data();
                 if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
@@ -36,8 +40,8 @@ namespace caffe {
                 else {
                     //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
                     //                           top_data + n * this->top_dim_);
-                    this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
+                    //this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+                    //                       top_data + n * this->top_dim_);
                 }
 
                 if (this->bias_term_) {
@@ -51,8 +55,24 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
-        
+    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
+         
+        // kernel_dim_;
+        int in_channels  = conv_in_channels_;
+        int out_channels = conv_out_channels_;
+        int input_h      = conv_input_shape_.cpu_data()[1];
+        int input_w      = conv_input_shape_.cpu_data()[2];
+        int kernel_h     = kernel_shape_.cpu_data()[0];
+        int kernel_w     = kernel_shape_.cpu_data()[1];
+        int pad_h        = pad_.cpu_data()[0];
+        int pad_w        = pad_.cpu_data()[1];
+        int stride_h     = stride_.cpu_data()[0];
+        int stride_w     = stride_.cpu_data()[1];
+        int dilation_h   = dilation_.cpu_data()[0];
+        int dilation_w   = dilation_.cpu_data()[1];
+        int kernel_size  = kernel_h * kernel_w;
+
+         Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w) 
     }
 
 
