@@ -178,9 +178,9 @@ namespace caffe {
         int dilation_w   = dilation_.cpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
-         Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w) 
+         Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w);
     }
-    
+
     template<typename Dtype>
     void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
