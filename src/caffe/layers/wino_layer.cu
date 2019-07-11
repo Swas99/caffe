@@ -167,17 +167,8 @@ namespace caffe {
          
         // kernel_dim_; 
         Dtype *wTransInput;
-        int data;
 
         printf("B: %d \n", B);
-        this->get_input_height(data);
-        printf("input_h: %d \n", data);
-        this->get_input_width(data);
-        printf("input_w: %d \n", data);
-        this->get_pad_height(data);
-        printf("pad_h: %d \n", data);
-        this->get_pad_width(data);
-        printf("pad_w: %d \n", data);
 
         //Winograd2x2ImTransComputeLauncher(input, wTransInput, in_channels, B, input_h, input_w,pad_h,pad_w);
     }
@@ -208,6 +199,15 @@ namespace caffe {
             Dtype *top_data = top[i]->mutable_gpu_data();
 
 
+            int data;
+            this->get_input_height(data);
+            printf("input_h: %d \n", data);
+            this->get_input_width(data);
+            printf("input_w: %d \n", data);
+            this->get_pad_height(data);
+            printf("pad_h: %d \n", data);
+            this->get_pad_width(data);
+            printf("pad_w: %d \n", data);
             xxx(bottom_data, weight, top_data, this->num_);
 
             const int *kernel_shape_data = this->kernel_shape_.gpu_data();
