@@ -611,7 +611,7 @@ namespace caffe {
                         }
 
                         // this->winograd_4_4_3_3(weight, in, out_tile);
-                        // this->flatten(out_tile,padded_out,tile_ind_x,tile_ind_y,out_channel,padded_out_w,padded_out_h);
+                        this->flatten(out_tile,padded_out,tile_ind_x,tile_ind_y,out_channel,padded_out_w,padded_out_h);
                     }
                 }
             }
