@@ -225,7 +225,7 @@ template<typename Dtype>
 void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dtype *Output, Dtype *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
 
     const Dtype** Input_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer);
-    const Dtype** Weight_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer + 16);
+    const float** Weight_ptrs_gpu_ = (const float **)(tmp_ptr_buffer + 16);
     Dtype** tmp_product_ptrs_gpu_ = (Dtype **)(tmp_ptr_buffer + 16 * 2);
 
     dim3 bDim(16, 1, 1);
