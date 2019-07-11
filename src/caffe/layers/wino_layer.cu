@@ -170,13 +170,13 @@ namespace caffe {
         int data;
 
         printf("B: %d \n", B);
-        this->get_input_height(&data);
+        this->get_input_height(data);
         printf("input_h: %d \n", data);
-        this->get_input_width(&data);
+        this->get_input_width(data);
         printf("input_w: %d \n", data);
-        this->get_pad_height(&data);
+        this->get_pad_height(data);
         printf("pad_h: %d \n", data);
-        this->get_pad_width(&data);
+        this->get_pad_width(data);
         printf("pad_w: %d \n", data);
 
         //Winograd2x2ImTransComputeLauncher(input, wTransInput, in_channels, B, input_h, input_w,pad_h,pad_w);
