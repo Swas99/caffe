@@ -612,6 +612,8 @@ namespace caffe {
         cudaError_t rc =cudaMalloc((void **)&padded_out, padded_out_channel_size*out_channels* sizeof(Dtype));
         if (rc != cudaSuccess)
             printf("Could not allocate memory: %d", rc);
+        else
+            printf("Yayyyyy!!!! allocate memory: %d", rc);
         cudaMemset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
 
 
