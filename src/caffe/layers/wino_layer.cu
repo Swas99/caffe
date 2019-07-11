@@ -302,13 +302,12 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         }
     }
 
-    template<typename Dtype>
-    void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
-                                              const vector<Blob<Dtype> *> &top) {
-        const Dtype *weight = this->blobs_[0]->gpu_data();
+    void WinogradLayer<float>::Forward_gpu(const vector<Blob<float> *> &bottom,
+                                              const vector<Blob<float> *> &top) {
+        const float *weight = this->blobs_[0]->gpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
-            const Dtype *bottom_data = bottom[i]->gpu_data();
-            Dtype *top_data = top[i]->mutable_gpu_data();
+            const float *bottom_data = bottom[i]->gpu_data();
+            float *top_data = top[i]->mutable_gpu_data();
 
 
             int H,W,pad_h,pad_w,C;
@@ -347,11 +346,17 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             //    }
 
             //    if (this->bias_term_) {
-            //        const Dtype *bias = this->blobs_[1]->gpu_data();
+            //        const float *bias = this->blobs_[1]->gpu_data();
             //        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
             //    }
             //}
         }
+    }
+
+
+    void WinogradLayer<double>::Forward_gpu(const vector<Blob<double> *> &bottom,
+                                              const vector<Blob<double> *> &top) {
+        
     }
 
     template<typename Dtype>
