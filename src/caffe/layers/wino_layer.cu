@@ -151,12 +151,12 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
     } 
 
-    void Winograd2x2ImTransComputeLauncher(const float *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
+    void Winograd2x2ImTransComputeLauncher(const Dtype *Input, Dtype *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
         int n_patch_width = (W + 1 + 2 * pad_w - 4) / 2 + 1;
         int n_patch_height = (H + 1 + 2 * pad_h - 4) / 2 + 1;
         dim3 blockDim(C, 1, 1);
         dim3 gridDim(n_patch_width, n_patch_height, B);
-        Winograd2x2ImTransCompute<float><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
+        Winograd2x2ImTransCompute<Dtype><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
     }
 
 
