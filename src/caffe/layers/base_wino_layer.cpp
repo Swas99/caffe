@@ -7,6 +7,10 @@
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/framework/shape_inference.h"
+
 namespace caffe {
 
     template<typename Dtype>
@@ -514,6 +518,31 @@ namespace caffe {
 
 #ifndef CPU_ONLY
 
+
+    template<typename Dtype>
+    void BaseWinogradLayer<Dtype>::get_input_width(int* out) {
+    {
+        *out = conv_input_shape_.cpu_data()[2];
+    }
+    
+    template<typename Dtype>
+    void BaseWinogradLayer<Dtype>::get_input_height(int* out) {
+    {
+        *out = conv_input_shape_.cpu_data()[1];
+    }
+    
+    template<typename Dtype>
+    void BaseWinogradLayer<Dtype>::get_pad_width(int* out) {
+    {
+        *out = pad_.cpu_data()[1];
+    }
+    
+    template<typename Dtype>
+    void BaseWinogradLayer<Dtype>::get_pad_height(int* out) {
+    {
+        *out = pad_.cpu_data()[0]
+    }
+    
 
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
