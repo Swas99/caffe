@@ -624,8 +624,8 @@ namespace caffe {
                 }
             }
         }
-        cudaFree(padded_out);
-        cudaFree(padded_input);
+        // cudaFree(padded_out);
+        // cudaFree(padded_input);
     }
 
 
