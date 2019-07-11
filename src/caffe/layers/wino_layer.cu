@@ -165,7 +165,8 @@ namespace caffe {
     void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
          
         // kernel_dim_; 
-
+        printf("B: %d \n", B);
+        
         //Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w);
     }
 
@@ -197,8 +198,8 @@ namespace caffe {
 
             xxx(bottom_data, weight, top_data, this->num_);
 
+            const int *kernel_shape_data = this->kernel_shape_.gpu_data();
             for (int n = 0; n < this->num_; ++n) {
-                const int *kernel_shape_data = this->kernel_shape_.gpu_data();
                 if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
                     this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
                                            top_data + n * this->top_dim_);
