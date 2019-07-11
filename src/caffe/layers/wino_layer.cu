@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <vector>
 
 #include "caffe/layers/wino_layer.hpp"
@@ -166,7 +167,7 @@ namespace caffe {
          
         // kernel_dim_; 
         printf("B: %d \n", B);
-        
+
         //Winograd2x2ImTransComputeLauncher(input, output, in_channels, B, input_h, input_w,pad_h,pad_w);
     }
 
