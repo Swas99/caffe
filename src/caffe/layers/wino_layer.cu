@@ -251,7 +251,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
 
     template<typename Dtype>
-    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C) {
+    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
         // kernel_dim_; 
 
@@ -265,30 +265,25 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
 
 
-    // Grab the input tensor
-    const Tensor& W_tensor = context->input(1);
-    auto Weight = W_tensor.flat<float>();
-    int K = W_tensor.dim_size(2);
-    
-    Dtype *Output;
-    cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(Dtype));
-    cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(Dtype));    
+        Dtype *Output;
+        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(Dtype));
+        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(Dtype));    
 
-    // Allocate temporary memory
-    Dtype *tmp_data_buffer_tensor;
-    cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(Dtype));
-    
-    long long *tmp_ptr_buffer_tensor;
-    cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
+        // Allocate temporary memory
+        Dtype *tmp_data_buffer_tensor;
+        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(Dtype));
+        
+        long long *tmp_ptr_buffer_tensor;
+        cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
 
 
-    // Set all but the first element of the output tensor to 0.
-     Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
-     tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
+        // Set all but the first element of the output tensor to 0.
+         Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
+         tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
 
-    cudaFree(wTransInput);
-    cudaFree(tmp_ptr_buffer_tensor);
-    cudaFree(tmp_data_buffer_tensor);
+        cudaFree(wTransInput);
+        cudaFree(tmp_ptr_buffer_tensor);
+        cudaFree(tmp_data_buffer_tensor);
     
     }
 
@@ -324,15 +319,24 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             this->get_pad_height(pad_h);
             this->get_pad_width(pad_w);
             this->get_conv_in_channels(C);
+
+            const int *kernel_shape_data = this->kernel_shape_.gpu_data();
+
             //printf("B: %d \n", this->num_);
             //printf("C: %d \n", C);
             //printf("input_h: %d \n", H);
             //printf("input_w: %d \n", W);
             //printf("pad_h: %d \n", pad_h);
             //printf("pad_w: %d \n", pad_w);
-            xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C);
+            printf("K: %d \n", kernel_shape_data[0]);
+            printf("K2: %d \n", kernel_shape_data[1]);
+            printf("K3: %d \n", kernel_shape_data[2]);
+            printf("K4: %d \n", kernel_shape_data[3]);
+            printf("K5: %d \n", kernel_shape_data[4]);
+            printf("K6: %d \n", kernel_shape_data[9]);
+            printf("K7: %d \n", kernel_shape_data[18]);
+            xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[0]);
 
-            const int *kernel_shape_data = this->kernel_shape_.gpu_data();
             //for (int n = 0; n < this->num_; ++n) {
             //    if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
             //        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
