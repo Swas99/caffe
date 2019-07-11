@@ -565,72 +565,161 @@ namespace caffe {
         int padded_out_h = 4*tile_num_h;
         int padded_channel_size     = padded_in_h*padded_in_w;
         int padded_out_channel_size = padded_out_w*padded_out_h;
+        
 
+        // Winograd2x2ImTransComputeLauncher
 
-        Dtype*padded_out;
-        cudaError_t err = cudaMalloc(&(padded_out),  sizeof(Dtype));
-        // cudaError_t err = cudaMalloc(&(padded_out), padded_out_channel_size*out_channels* sizeof(Dtype));
-        if (err != cudaSuccess) {
-            LOG(FATAL) << "FAiled CUDA MALLOC!!";
-            //set null manually
-        }
- 
-        // memset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
-
-        // //pad 0
-        // Dtype* padded_input = (Dtype*)malloc(in_channels*padded_channel_size* sizeof(Dtype));
-        // memset(padded_input,0, sizeof(Dtype)*in_channels*padded_channel_size);
-
-        // //copy input to padded_input
-        // for (int c=0;c<in_channels;c++)
-        //     for (int h=0;h<input_h;h++)
-        //         for (int w=0;w<input_w;w++)
-        //         {
-        //             *(padded_input+c*padded_channel_size+padded_in_w*(h+pad_h)+w+pad_w) = *(input+c*channel_size+h*input_w+w);
-        //         }
-
-        // int tile_x = 0; //tile index x
-        // int tile_y = 0; //tile index y
-
-        // for (int out_channel = 0; out_channel < out_channels; out_channel++) {
-        //     for (int tile_ind_x = 0; tile_ind_x < tile_num_w ; tile_ind_x++)
-        //     {
-        //         for (int tile_ind_y = 0; tile_ind_y < tile_num_h ; tile_ind_y++) {
-        //             for (int in_channel = 0; in_channel < in_channels; in_channel++) {
-        //                 for (int i = 0; i < kernel_w; i++) {
-        //                     for (int j = 0; j < kernel_h; j++)
-        //                     {
-        //                         weight[i][j] = *(weights + out_channel * in_channels * kernel_size + in_channel * 3*3 + j * 3 + i);
-        //                     }
-        //                 }
-
-        //                 tile_x = tile_ind_x * 4;
-        //                 tile_y = tile_ind_y * 4;
-        //                 //insert input tile data
-        //                 for (int i = 0; i < 6; i++) {
-        //                     for (int j = 0; j < 6; j++)
-        //                     {
-        //                         in[i][j] = *(padded_input + in_channel * padded_in_h*padded_in_w + (tile_y+j)*padded_in_w  + tile_x + i);
-        //                     }
-        //                 }
-
-        //                 this->winograd_4_4_3_3(weight, in, out_tile);
-        //                 this->flatten(out_tile,padded_out,tile_ind_x,tile_ind_y,out_channel,padded_out_w,padded_out_h);
-        //             }
-        //         }
-        //     }
-
-        //     for (int w = 0;w<output_w;w++)
-        //     {
-        //         for (int h=0;h<output_h;h++)
-        //         {
-        //             *(output+out_channel*out_channel_size+h*output_w+w) = *(padded_out+out_channel*padded_out_channel_size+h*padded_out_w+w);
-        //         }
-        //     }
-        // } 
-        // cudaFree(padded_out);
-        // cudaFree(padded_input);
     }
+
+
+template <typename T>
+__global__ void Winograd2x2ImTransCompute(const T *Input, T *Output, int C, int B, int H, int W, int pad_h, int pad_w)
+{ 
+    int bx = blockIdx.x; // w
+    int by = blockIdx.y; // h
+    int bz = blockIdx.z; // b 
+    int t = threadIdx.x; // c
+
+    int nW = (W + 1 + 2 * pad_w - 4) / 2 + 1;
+    int nH = (H + 1 + 2 * pad_h - 4) / 2 + 1;
+
+    int f_b = bz;
+    int xBase = 2 * bx - pad_w;
+    int yBase = 2 * by - pad_h;
+
+    // T input_patch_1 [16] = {0};
+    T input_patch_0;
+    T input_patch_1;
+    T input_patch_2;
+    T input_patch_3;
+    T input_patch_4;
+    T input_patch_5;
+    T input_patch_6;
+    T input_patch_7;
+    T input_patch_8;
+    T input_patch_9;
+    T input_patch_10;
+    T input_patch_11;
+    T input_patch_12;
+    T input_patch_13;
+    T input_patch_14;
+    T input_patch_15;
+
+    // load (4, 4, 1) patch of input from global memory
+    int f_x, f_y;
+    f_x = xBase + 0; f_y = yBase + 0;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_0 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_0 = 0;
+    f_x = xBase + 1; f_y = yBase + 0;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_1 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_1 = 0;
+    f_x = xBase + 2; f_y = yBase + 0;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_2 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_2 = 0;
+    f_x = xBase + 3; f_y = yBase + 0;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_3 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_3 = 0;
+    f_x = xBase + 0; f_y = yBase + 1;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_4 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_4 = 0;
+    f_x = xBase + 1; f_y = yBase + 1;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_5 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_5 = 0;
+    f_x = xBase + 2; f_y = yBase + 1;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_6 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_6 = 0;
+    f_x = xBase + 3; f_y = yBase + 1;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_7 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_7 = 0;
+    f_x = xBase + 0; f_y = yBase + 2;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_8 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_8 = 0;
+    f_x = xBase + 1; f_y = yBase + 2;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_9 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_9 = 0;
+    f_x = xBase + 2; f_y = yBase + 2;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_10 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_10 = 0;
+    f_x = xBase + 3; f_y = yBase + 2;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_11 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_11 = 0;
+    f_x = xBase + 0; f_y = yBase + 3;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_12 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_12 = 0;
+    f_x = xBase + 1; f_y = yBase + 3;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_13 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_13 = 0;
+    f_x = xBase + 2; f_y = yBase + 3;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_14 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_14 = 0;
+    f_x = xBase + 3; f_y = yBase + 3;
+    if((f_x > -1) && (f_x < W) && (f_y > -1) && (f_y < H)) input_patch_15 = Input [ f_b * H * W * C + f_y * W * C + f_x * C + t ]; 
+    else input_patch_15 = 0;
+    
+    T trans_input_patch_0;
+    T trans_input_patch_1;
+    T trans_input_patch_2;
+    T trans_input_patch_3;
+    T trans_input_patch_4;
+    T trans_input_patch_5;
+    T trans_input_patch_6;
+    T trans_input_patch_7;
+    T trans_input_patch_8;
+    T trans_input_patch_9;
+    T trans_input_patch_10;
+    T trans_input_patch_11;
+    T trans_input_patch_12;
+    T trans_input_patch_13;
+    T trans_input_patch_14;
+    T trans_input_patch_15;
+
+    // Winograd Transform
+    trans_input_patch_0 = input_patch_0 - input_patch_2 - input_patch_8 + input_patch_10;
+    trans_input_patch_1 = input_patch_1 + input_patch_2 - input_patch_9 - input_patch_10;
+    trans_input_patch_2 = input_patch_2 - input_patch_1 + input_patch_9 - input_patch_10;
+    trans_input_patch_3 = input_patch_1 - input_patch_3 - input_patch_9 + input_patch_11;
+    trans_input_patch_4 = input_patch_4 - input_patch_6 + input_patch_8 - input_patch_10;
+    trans_input_patch_5 = input_patch_5 + input_patch_6 + input_patch_9 + input_patch_10;
+    trans_input_patch_6 = input_patch_6 - input_patch_5 - input_patch_9 + input_patch_10;
+    trans_input_patch_7 = input_patch_5 - input_patch_7 + input_patch_9 - input_patch_11;
+    trans_input_patch_8 = input_patch_6 - input_patch_4 + input_patch_8 - input_patch_10;
+    trans_input_patch_9 = input_patch_9 - input_patch_6 - input_patch_5 + input_patch_10;
+    trans_input_patch_10 = input_patch_5 - input_patch_6 - input_patch_9 + input_patch_10;
+    trans_input_patch_11 = input_patch_7 - input_patch_5 + input_patch_9 - input_patch_11;
+    trans_input_patch_12 = input_patch_4 - input_patch_6 - input_patch_12 + input_patch_14;
+    trans_input_patch_13 = input_patch_5 + input_patch_6 - input_patch_13 - input_patch_14;
+    trans_input_patch_14 = input_patch_6 - input_patch_5 + input_patch_13 - input_patch_14;
+    trans_input_patch_15 = input_patch_5 - input_patch_7 - input_patch_13 + input_patch_15;
+
+
+    int offset = f_b * nH * nW * C + (by * nW + bx) * C + t;
+    int stride = B * nH * nW * C;
+    
+    Output [ 0 * stride + offset ] = trans_input_patch_0;
+    Output [ 1 * stride + offset ] = trans_input_patch_1;
+    Output [ 2 * stride + offset ] = trans_input_patch_2;
+    Output [ 3 * stride + offset ] = trans_input_patch_3;
+    Output [ 4 * stride + offset ] = trans_input_patch_4;
+    Output [ 5 * stride + offset ] = trans_input_patch_5;
+    Output [ 6 * stride + offset ] = trans_input_patch_6;
+    Output [ 7 * stride + offset ] = trans_input_patch_7;
+    Output [ 8 * stride + offset ] = trans_input_patch_8;
+    Output [ 9 * stride + offset ] = trans_input_patch_9;
+    Output [ 10* stride + offset ] = trans_input_patch_10;
+    Output [ 11* stride + offset ] = trans_input_patch_11;
+    Output [ 12* stride + offset ] = trans_input_patch_12;
+    Output [ 13* stride + offset ] = trans_input_patch_13;
+    Output [ 14* stride + offset ] = trans_input_patch_14;
+    Output [ 15* stride + offset ] = trans_input_patch_15;
+} 
+
+void Winograd2x2ImTransComputeLauncher(const float *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
+    int n_patch_width = (W + 1 + 2 * pad_w - 4) / 2 + 1;
+    int n_patch_height = (H + 1 + 2 * pad_h - 4) / 2 + 1;
+    dim3 blockDim(C, 1, 1);
+    dim3 gridDim(n_patch_width, n_patch_height, B);
+    Winograd2x2ImTransCompute<float><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
+}
 
     template <typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
