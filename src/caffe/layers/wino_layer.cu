@@ -244,9 +244,9 @@ void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dty
         Input_ptrs_gpu_, C,
         &zero, tmp_product_ptrs_gpu_, K, 16);
 
-    dim3 blockDim(K, 1, 1);
-    dim3 gridDim(nW, nH, B);
-    Output_transform <Dtype> <<<gridDim, blockDim>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
+    dim3 blockDim2(K, 1, 1);
+    dim3 gridDim2(nW, nH, B);
+    Output_transform <Dtype> <<<gridDim2, blockDim2>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
 
     cublasDestroy(handle);
 }
