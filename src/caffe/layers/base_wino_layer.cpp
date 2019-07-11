@@ -519,27 +519,27 @@ namespace caffe {
 #ifndef CPU_ONLY
 
 
-    void BaseWinogradLayer<Dtype>::get_input_width(int &out)
+    void BaseWinogradLayer::get_input_width(int &out)
     {
         out = conv_input_shape_.cpu_data()[2];
     }
     
-    void BaseWinogradLayer<Dtype>::get_input_height(int &out)
+    void BaseWinogradLayer::get_input_height(int &out)
     {
         out = conv_input_shape_.cpu_data()[1];
     }
     
-    void BaseWinogradLayer<Dtype>::get_pad_width(int &out)
+    void BaseWinogradLayer::get_pad_width(int &out)
     {
         out = pad_.cpu_data()[1];
     }
-    
-    void BaseWinogradLayer<Dtype>::get_pad_height(int &out)
+
+    void BaseWinogradLayer::get_pad_height(int &out)
     {
         out = pad_.cpu_data()[0];
     }
 
-    void BaseWinogradLayer<Dtype>::get_conv_in_channels(int &out)
+    void BaseWinogradLayer::get_conv_in_channels(int &out)
     {
         out = conv_in_channels_;
     }
