@@ -568,7 +568,8 @@ namespace caffe {
 
 
         Dtype*padded_out;
-        cudaError_t err = cudaMalloc(&(padded_out), padded_out_channel_size*out_channels* sizeof(Dtype));
+        cudaError_t err = cudaMalloc(&(padded_out),  sizeof(Dtype));
+        // cudaError_t err = cudaMalloc(&(padded_out), padded_out_channel_size*out_channels* sizeof(Dtype));
         if (err != cudaSuccess) {
             LOG(FATAL) << "FAiled CUDA MALLOC!!";
             //set null manually
