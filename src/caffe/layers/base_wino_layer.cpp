@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <vector>
-#include <stdio.h>
+#include <iostream>
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/base_wino_layer.hpp"
@@ -533,13 +533,24 @@ namespace caffe {
         int dilation_w   = dilation_.gpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
-        printf("OLOLOLALALALLELLELE OO");
+        using namespace detail;
+        std::cout << in_channels << std::endl;
+        std::cout << out_channels << std::endl;
+        std::cout << input_h << std::endl;
+        std::cout << input_w << std::endl;
+        std::cout << kernel_h << std::endl;
+        std::cout << kernel_w << std::endl;
+        std::cout << pad_h << std::endl;
+        std::cout << pad_w << std::endl;
+        std::cout << stride_h << std::endl;
+        std::cout << stride_w << std::endl;
+        std::cout << dilation_h << std::endl;
+        std::cout << dilation_w << std::endl;
+        std::cout << kernel_size << std::endl;
+        
+
         if (kernel_h != 3 || kernel_w != 3) {
             // LOG(FATAL) << "kernel size must be 3";
-        }
-        else
-        {
-            
         }
         if (pad_h>4||pad_w>4)
         {
@@ -715,3 +726,15 @@ namespace caffe {
     INSTANTIATE_CLASS(BaseWinogradLayer);
 
 }  // namespace caffe
+
+namespace detail
+{
+    template<typename T, typename CharT, typename Traits>
+    std::basic_ostream<CharT, Traits> &
+    operator<<(std::basic_ostream<CharT, Traits> &os, const T &)
+    {
+        const char s[] = "<unknown-type>";
+        os.write(s, sizeof(s));
+        return os;
+    }
+}
