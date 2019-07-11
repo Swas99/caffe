@@ -518,25 +518,25 @@ namespace caffe {
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::get_input_width(int &out)
     {
-        **out = conv_input_shape_.cpu_data()[2];
+        out = conv_input_shape_.cpu_data()[2];
     }
     
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::get_input_height(int &out)
     {
-        **out = conv_input_shape_.cpu_data()[1];
+        out = conv_input_shape_.cpu_data()[1];
     }
     
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::get_pad_width(int &out)
     {
-        **out = pad_.cpu_data()[1];
+        out = pad_.cpu_data()[1];
     }
     
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::get_pad_height(int &out)
     {
-        **out = pad_.cpu_data()[0]
+        out = pad_.cpu_data()[0];
     }
     
 
