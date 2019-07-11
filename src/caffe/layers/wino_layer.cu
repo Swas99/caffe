@@ -204,7 +204,7 @@ namespace caffe {
             this->get_conv_in_channels(C);
             printf("B: %d \n", this->num_);
             printf("input_h: %d \n", H);
-            printf("input_w: %d \n", w);
+            printf("input_w: %d \n", W);
             printf("pad_h: %d \n", pad_h);
             printf("pad_w: %d \n", pad_w);
             xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C);
