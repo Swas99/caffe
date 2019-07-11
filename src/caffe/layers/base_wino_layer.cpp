@@ -6,6 +6,7 @@
 #include "caffe/layers/base_wino_layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace caffe {
 
