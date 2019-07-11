@@ -232,8 +232,8 @@ void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dty
     dim3 gDim(1, 1, 1);
     assign <<<gDim, bDim>>> (Input, Weight, tmp_data_buffer, Input_ptrs_gpu_, Weight_ptrs_gpu_, tmp_product_ptrs_gpu_, C, B, nH, nW, K);
     
-    Dtype one = 1;
-    Dtype zero = 0;
+    float one = 1;
+    float zero = 0;
 
     cublasHandle_t handle;
     cublasCreate(&handle);
