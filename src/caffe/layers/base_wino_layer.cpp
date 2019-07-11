@@ -574,7 +574,7 @@ namespace caffe {
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-// #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 // dim3 threadsPerBlock(C)
 // dim3 numBlocks(Batch, nH, nW)
