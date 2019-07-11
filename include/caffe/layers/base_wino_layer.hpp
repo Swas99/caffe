@@ -38,7 +38,6 @@ namespace caffe {
         void forward_cpu_gemm(const Dtype *input, const Dtype *weights,
                               Dtype *output, bool skip_im2col = false);
         void forward_cpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
-        void forward_gpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
         void winograd_4_4_3_3(Dtype g[3][3], Dtype d[6][6], Dtype Y[4][4]);
         void flatten(const Dtype out_tile[4][4], Dtype *output, const int tile_ind_x, const int tile_ind_y, const int out_channel,
                                     const int out_w, const int out_h);
@@ -54,6 +53,7 @@ namespace caffe {
         void backward_cpu_bias(Dtype *bias, const Dtype *input);
 
 #ifndef CPU_ONLY
+        void forward_gpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
         void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
             Dtype* output, bool skip_im2col = false);
         void forward_gpu_bias(Dtype* output, const Dtype* bias);
