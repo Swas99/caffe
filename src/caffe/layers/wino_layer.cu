@@ -161,7 +161,7 @@ namespace caffe {
 
 
     template<typename Dtype>
-    __global__ void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
+    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
          
         // kernel_dim_; 
 
