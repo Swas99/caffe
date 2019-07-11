@@ -611,24 +611,28 @@ namespace caffe {
         Dtype*padded_out;
         cudaError_t rc =cudaMalloc((void **)&padded_out, padded_out_channel_size*out_channels* sizeof(Dtype));
         if (rc != cudaSuccess)
-            printf("Could not allocate memory: %d", rc);
+            printf("Could not allocate memory1: %d", rc);
         else
-            printf("Yayyyyy!!!! allocate memory: %d", rc);
+            printf("Yayyyyy1!!!! allocate memory: %d", rc);
         cudaMemset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
 
 
         //pad 0
         // Dtype* padded_input = (Dtype*)malloc(in_channels*padded_channel_size* sizeof(Dtype));
         Dtype*padded_input;
-        cudaMalloc((void **)&padded_input, in_channels*padded_channel_size* sizeof(Dtype));
+        cudaError_t rc = cudaMalloc((void **)&padded_input, in_channels*padded_channel_size* sizeof(Dtype));
+        if (rc != cudaSuccess)
+            printf("Could not allocate memory2: %d", rc);
+        else
+            printf("Yayyyyy2!!!! allocate memory: %d", rc);
         cudaMemset(padded_input,0, sizeof(Dtype)*in_channels*padded_channel_size);
 
         for (int c=0;c<in_channels;c++)
             for (int h=0;h<input_h;h++)
                 for (int w=0;w<input_w;w++)
                 {
-                     padded_input[c*padded_channel_size+padded_in_w*(h+pad_h)+w+pad_w];
-                     input[c*channel_size+h*input_w+w];
+                     *padded_input + c*padded_channel_size+padded_in_w*(h+pad_h)+w+pad_w];
+                     *input + c*channel_size+h*input_w+w];
                 }
 
         //copy input to padded_input
