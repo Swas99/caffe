@@ -211,7 +211,7 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
 } 
 
 template<typename Dtype>
-__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const float **Input_ptrs_gpu, const float **Weight_ptrs_gpu, float **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
+__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const Dtype **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
     int tx = threadIdx.x; // 16
     
     Input_ptrs_gpu[tx] = Input + tx * B * nH * nW * C;
@@ -224,9 +224,9 @@ __global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_
 template<typename Dtype>
 void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dtype *Output, Dtype *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
 
-    const float** Input_ptrs_gpu_ = (const float **)(tmp_ptr_buffer);
-    const float** Weight_ptrs_gpu_ = (const float **)(tmp_ptr_buffer + 16);
-    float** tmp_product_ptrs_gpu_ = (float **)(tmp_ptr_buffer + 16 * 2);
+    const Dtype** Input_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer);
+    const Dtype** Weight_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer + 16);
+    Dtype** tmp_product_ptrs_gpu_ = (Dtype **)(tmp_ptr_buffer + 16 * 2);
 
     dim3 bDim(16, 1, 1);
     dim3 gDim(1, 1, 1);
