@@ -572,6 +572,15 @@ namespace caffe {
     }
 
 
+#if GOOGLE_CUDA
+#define EIGEN_USE_GPU
+// #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+
+// dim3 threadsPerBlock(C)
+// dim3 numBlocks(Batch, nH, nW)
+
+// I = (Batch, H, W, C)
+// O = (16, Batch, nH, nW, C)
 template <typename T>
 __global__ void Winograd2x2ImTransCompute(const T *Input, T *Output, int C, int B, int H, int W, int pad_h, int pad_w)
 { 
@@ -720,6 +729,9 @@ void Winograd2x2ImTransComputeLauncher(const float *Input, float *TransIm, int C
     dim3 gridDim(n_patch_width, n_patch_height, B);
     Winograd2x2ImTransCompute<float><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
 }
+
+#endif
+
 
     template <typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
