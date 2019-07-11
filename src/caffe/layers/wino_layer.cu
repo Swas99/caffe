@@ -153,13 +153,12 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
     } 
 
-    template<typename Dtype>
-    void Winograd2x2ImTransComputeLauncher(const Dtype *Input, Dtype *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
+    void Winograd2x2ImTransComputeLauncher(const Dtype *Input, float *TransIm, int C, int B, int H, int W, int pad_h, int pad_w) {
         int n_patch_width = (W + 1 + 2 * pad_w - 4) / 2 + 1;
         int n_patch_height = (H + 1 + 2 * pad_h - 4) / 2 + 1;
         dim3 blockDim(C, 1, 1);
         dim3 gridDim(n_patch_width, n_patch_height, B);
-        Winograd2x2ImTransCompute<Dtype><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
+        Winograd2x2ImTransCompute<float><<<gridDim, blockDim>>>(Input, TransIm, C, B, H, W, pad_h, pad_w);
     }
 
 
@@ -210,8 +209,7 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
     Output[bz*H*W*K + (2*by+1)*W*K + (2*bx+1)*K + tx] = output_patch_3;
 } 
 
-template<typename Dtype>
-__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const Dtype **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
+__global__ void assign(const float *Input, const float *Weight, float *tmp_data_buffer, const float **Input_ptrs_gpu, const float **Weight_ptrs_gpu, float **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
     int tx = threadIdx.x; // 16
     
     Input_ptrs_gpu[tx] = Input + tx * B * nH * nW * C;
@@ -221,19 +219,18 @@ __global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_
 
 // Input = (16, B, nH, nW, C)
 // Weight = (16, C, K)
-template<typename Dtype>
-void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dtype *Output, Dtype *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
+void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, float *Output, float *tmp_data_buffer, const long long *tmp_ptr_buffer, int C, int B, int nH, int nW, int K, int pad_h, int pad_w) {
 
-    const Dtype** Input_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer);
-    const Dtype** Weight_ptrs_gpu_ = (const Dtype **)(tmp_ptr_buffer + 16);
-    Dtype** tmp_product_ptrs_gpu_ = (Dtype **)(tmp_ptr_buffer + 16 * 2);
+    const float** Input_ptrs_gpu_ = (const float **)(tmp_ptr_buffer);
+    const float** Weight_ptrs_gpu_ = (const float **)(tmp_ptr_buffer + 16);
+    float** tmp_product_ptrs_gpu_ = (float **)(tmp_ptr_buffer + 16 * 2);
 
     dim3 bDim(16, 1, 1);
     dim3 gDim(1, 1, 1);
     assign <<<gDim, bDim>>> (Input, Weight, tmp_data_buffer, Input_ptrs_gpu_, Weight_ptrs_gpu_, tmp_product_ptrs_gpu_, C, B, nH, nW, K);
     
-    Dtype one = 1;
-    Dtype zero = 0;
+    float one = 1;
+    float zero = 0;
 
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -246,7 +243,7 @@ void Winograd2x2ConvComputeLauncher(const Dtype *Input, const Dtype *Weight, Dty
 
     dim3 blockDim2(K, 1, 1);
     dim3 gridDim2(nW, nH, B);
-    Output_transform <Dtype> <<<gridDim2, blockDim2>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
+    Output_transform <float> <<<gridDim2, blockDim2>>> (tmp_data_buffer, Output, C, B, nH, nW, K, pad_h, pad_w);
 
     cublasDestroy(handle);
 }
