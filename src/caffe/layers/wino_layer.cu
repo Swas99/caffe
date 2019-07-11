@@ -53,53 +53,6 @@ namespace caffe {
     template<typename Dtype>
     void forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
         
-        // kernel_dim_;
-        int in_channels  = conv_in_channels_;
-        int out_channels = conv_out_channels_;
-        int input_h      = conv_input_shape_.cpu_data()[1];
-        int input_w      = conv_input_shape_.cpu_data()[2];
-        int kernel_h     = kernel_shape_.cpu_data()[0];
-        int kernel_w     = kernel_shape_.cpu_data()[1];
-        int pad_h        = pad_.cpu_data()[0];
-        int pad_w        = pad_.cpu_data()[1];
-        int stride_h     = stride_.cpu_data()[0];
-        int stride_w     = stride_.cpu_data()[1];
-        int dilation_h   = dilation_.cpu_data()[0];
-        int dilation_w   = dilation_.cpu_data()[1];
-        int kernel_size  = kernel_h * kernel_w;
-
-
-        if (kernel_h != 3 || kernel_w != 3) {
-            LOG(FATAL) << "kernel size must be 3";
-        }
-        if (pad_h>4||pad_w>4)
-        {
-            LOG(FATAL) << "padding must less than 4";
-        }
-        if (group_ > 1) {
-            LOG(FATAL) << "multi Groups not implemented ";
-        }
-
-
-        Dtype weight[3][3];  //kernel weight
-        Dtype in[6][6]; //input tile
-        Dtype out_tile[4][4]; //out put tile
-        const int output_h = (input_h + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
-        const int output_w = (input_w + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
-        const int channel_size = input_h * input_w;
-        const int out_channel_size = output_h*output_w;
-        memset(output,0, sizeof(Dtype)*output_h*output_w*out_channels);
-
-        // parameters of padding and tiling
-        int tile_num_w = (input_w + 2 * pad_w-6) / 4 + ((input_w + 2 * pad_w-6) % 4 > 0 ? 1 : 0)+1;
-        int tile_num_h = (input_h + 2 * pad_h-6) / 4 + ((input_h + 2 * pad_h-6) % 4 > 0 ? 1 : 0)+1;
-
-        int padded_in_w  = 4*tile_num_w+2;
-        int padded_in_h  = 4*tile_num_h+2;
-        int padded_out_w = 4*tile_num_w;
-        int padded_out_h = 4*tile_num_h;
-        int padded_channel_size     = padded_in_h*padded_in_w;
-        int padded_out_channel_size = padded_out_w*padded_out_h;
     }
 
 
