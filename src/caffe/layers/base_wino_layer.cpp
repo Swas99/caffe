@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <vector>
-#include <iostream>
+#include <stdio.h>
 
 #include "caffe/filler.hpp"
 #include "caffe/layers/base_wino_layer.hpp"
@@ -532,19 +532,21 @@ namespace caffe {
         int dilation_w   = dilation_.gpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
-        std::cout << in_channels << std::endl;
-        std::cout << out_channels << std::endl;
-        std::cout << input_h << std::endl;
-        std::cout << input_w << std::endl;
-        std::cout << kernel_h << std::endl;
-        std::cout << kernel_w << std::endl;
-        std::cout << pad_h << std::endl;
-        std::cout << pad_w << std::endl;
-        std::cout << stride_h << std::endl;
-        std::cout << stride_w << std::endl;
-        std::cout << dilation_h << std::endl;
-        std::cout << dilation_w << std::endl;
-        std::cout << kernel_size << std::endl;
+        
+        printf("The string: %ls\n", in_channels);
+        // std::cout << in_channels << std::endl;
+        // std::cout << out_channels << std::endl;
+        // std::cout << input_h << std::endl;
+        // std::cout << input_w << std::endl;
+        // std::cout << kernel_h << std::endl;
+        // std::cout << kernel_w << std::endl;
+        // std::cout << pad_h << std::endl;
+        // std::cout << pad_w << std::endl;
+        // std::cout << stride_h << std::endl;
+        // std::cout << stride_w << std::endl;
+        // std::cout << dilation_h << std::endl;
+        // std::cout << dilation_w << std::endl;
+        // std::cout << kernel_size << std::endl;
 
 
         if (kernel_h != 3 || kernel_w != 3) {
