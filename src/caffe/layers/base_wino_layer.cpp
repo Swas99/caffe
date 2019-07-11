@@ -514,19 +514,6 @@ namespace caffe {
 #ifndef CPU_ONLY
 
 
-
-namespace detail
-{
-    template<typename T, typename CharT, typename Traits>
-    std::basic_ostream<CharT, Traits> &
-    operator<<(std::basic_ostream<CharT, Traits> &os, const T &)
-    {
-        const char s[] = "<unknown-type>";
-        os.write(s, sizeof(s));
-        return os;
-    }
-}
-
     template<typename Dtype>
     void BaseWinogradLayer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
         
@@ -545,7 +532,6 @@ namespace detail
         int dilation_w   = dilation_.gpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
-        using namespace detail;
         std::cout << in_channels << std::endl;
         std::cout << out_channels << std::endl;
         std::cout << input_h << std::endl;
@@ -559,7 +545,7 @@ namespace detail
         std::cout << dilation_h << std::endl;
         std::cout << dilation_w << std::endl;
         std::cout << kernel_size << std::endl;
-        
+
 
         if (kernel_h != 3 || kernel_w != 3) {
             // LOG(FATAL) << "kernel size must be 3";
