@@ -249,28 +249,27 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 }
 
 
-    template<typename Dtype>
-    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void xxx(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
         // kernel_dim_; 
 
         int nW = (W + 1) / 2;
         int nH = (H + 1) / 2;
-        Dtype *wTransInput;
-        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(Dtype));
-        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(Dtype));
+        float *wTransInput;
+        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
+        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
         
         Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
 
 
 
-        Dtype *Output;
-        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(Dtype));
-        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(Dtype));    
+        float *Output;
+        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(float));
+        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
         // Allocate temporary memory
-        Dtype *tmp_data_buffer_tensor;
-        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(Dtype));
+        float *tmp_data_buffer_tensor;
+        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
         
         long long *tmp_ptr_buffer_tensor;
         cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
@@ -286,7 +285,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     
     }
 
-    template<typename Dtype>
+
     void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         const int *stride_data = this->stride_.gpu_data();
