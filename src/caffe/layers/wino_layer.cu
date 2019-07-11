@@ -211,7 +211,7 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
 } 
 
 template<typename Dtype>
-__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const Dtype **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
+__global__ void assign(const Dtype *Input, const Dtype *Weight, Dtype *tmp_data_buffer, const Dtype **Input_ptrs_gpu, const float **Weight_ptrs_gpu, Dtype **tmp_product_ptrs_gpu, int C, int B, int nH, int nW, int K) {
     int tx = threadIdx.x; // 16
     
     Input_ptrs_gpu[tx] = Input + tx * B * nH * nW * C;
