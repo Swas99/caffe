@@ -355,21 +355,6 @@ namespace caffe {
         int kernel_size  = kernel_h * kernel_w;
 
 
-        printf("in_channels: %d\n", in_channels);
-        printf("out_channels: %d\n", out_channels);
-        printf("input_h: %d\n", input_h);
-        printf("input_w: %d\n", input_w);
-        printf("kernel_h: %d\n", kernel_h);
-        printf("kernel_w: %d\n", kernel_w);
-        printf("pad_h: %d\n", pad_h);
-        printf("pad_w: %d\n", pad_w);
-        printf("stride_h: %d\n", stride_h);
-        printf("stride_w: %d\n", stride_w);
-        printf("dilation_h: %d\n", dilation_h);
-        printf("dilation_w: %d\n", dilation_w);
-        printf("kernel_size: %d\n", kernel_size);
-
-        
         if (kernel_h != 3 || kernel_w != 3) {
             LOG(FATAL) << "kernel size must be 3";
         }
@@ -536,35 +521,32 @@ namespace caffe {
         // kernel_dim_;
         int in_channels  = conv_in_channels_;
         int out_channels = conv_out_channels_;
-        int input_h      = conv_input_shape_.gpu_data()[1];
-        int input_w      = conv_input_shape_.gpu_data()[2];
-        int kernel_h     = kernel_shape_.gpu_data()[0];
-        int kernel_w     = kernel_shape_.gpu_data()[1];
-        int pad_h        = pad_.gpu_data()[0];
-        int pad_w        = pad_.gpu_data()[1];
-        int stride_h     = stride_.gpu_data()[0];
-        int stride_w     = stride_.gpu_data()[1];
-        int dilation_h   = dilation_.gpu_data()[0];
-        int dilation_w   = dilation_.gpu_data()[1];
+        int input_h      = conv_input_shape_.cpu_data()[1];
+        int input_w      = conv_input_shape_.cpu_data()[2];
+        int kernel_h     = kernel_shape_.cpu_data()[0];
+        int kernel_w     = kernel_shape_.cpu_data()[1];
+        int pad_h        = pad_.cpu_data()[0];
+        int pad_w        = pad_.cpu_data()[1];
+        int stride_h     = stride_.cpu_data()[0];
+        int stride_w     = stride_.cpu_data()[1];
+        int dilation_h   = dilation_.cpu_data()[0];
+        int dilation_w   = dilation_.cpu_data()[1];
         int kernel_size  = kernel_h * kernel_w;
 
         
-        printf("%d\t", in_channels);
-        printf("%d\t", out_channels);
-        printf("%d\t", input_h);
-        // std::cout << in_channels << std::endl;
-        // std::cout << out_channels << std::endl;
-        // std::cout << input_h << std::endl;
-        // std::cout << input_w << std::endl;
-        // std::cout << kernel_h << std::endl;
-        // std::cout << kernel_w << std::endl;
-        // std::cout << pad_h << std::endl;
-        // std::cout << pad_w << std::endl;
-        // std::cout << stride_h << std::endl;
-        // std::cout << stride_w << std::endl;
-        // std::cout << dilation_h << std::endl;
-        // std::cout << dilation_w << std::endl;
-        // std::cout << kernel_size << std::endl;
+        // printf("in_channels: %d\n", in_channels);
+        // printf("out_channels: %d\n", out_channels);
+        // printf("input_h: %d\n", input_h);
+        // printf("input_w: %d\n", input_w);
+        // printf("kernel_h: %d\n", kernel_h);
+        // printf("kernel_w: %d\n", kernel_w);
+        // printf("pad_h: %d\n", pad_h);
+        // printf("pad_w: %d\n", pad_w);
+        // printf("stride_h: %d\n", stride_h);
+        // printf("stride_w: %d\n", stride_w);
+        // printf("dilation_h: %d\n", dilation_h);
+        // printf("dilation_w: %d\n", dilation_w);
+        // printf("kernel_size: %d\n", kernel_size);
 
 
         if (kernel_h != 3 || kernel_w != 3) {
