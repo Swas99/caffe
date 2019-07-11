@@ -217,22 +217,22 @@ namespace caffe {
             xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C);
 
             const int *kernel_shape_data = this->kernel_shape_.gpu_data();
-            for (int n = 0; n < this->num_; ++n) {
-                if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
-                    this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
-                else {
-                    //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
-                    //                           top_data + n * this->top_dim_);
-                    this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
-                }
+            //for (int n = 0; n < this->num_; ++n) {
+            //    if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
+            //        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+            //                               top_data + n * this->top_dim_);
+            //    else {
+            //        //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
+            //        //                           top_data + n * this->top_dim_);
+            //        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+            //                               top_data + n * this->top_dim_);
+            //    }
 
-                if (this->bias_term_) {
-                    const Dtype *bias = this->blobs_[1]->gpu_data();
-                    this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
-                }
-            }
+            //    if (this->bias_term_) {
+            //        const Dtype *bias = this->blobs_[1]->gpu_data();
+            //        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+            //    }
+            //}
         }
     }
 
