@@ -533,8 +533,9 @@ namespace caffe {
         int kernel_size  = kernel_h * kernel_w;
 
         
-        printf("%d", in_channels);
-        printf("%d", out_channels);
+        printf("%d\t", in_channels);
+        printf("%d\t", out_channels);
+        printf("%d\t", input_h);
         // std::cout << in_channels << std::endl;
         // std::cout << out_channels << std::endl;
         // std::cout << input_h << std::endl;
