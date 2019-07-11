@@ -167,7 +167,7 @@ namespace caffe {
          
         // kernel_dim_; 
         Dtype *wTransInput;
-        Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,pad_h,pad_w);
+        //Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
     }
 
     template<typename Dtype>
