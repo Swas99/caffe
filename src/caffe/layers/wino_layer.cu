@@ -55,7 +55,7 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
+    __global__ void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
          
         // kernel_dim_;
         int in_channels  = conv_in_channels_;
