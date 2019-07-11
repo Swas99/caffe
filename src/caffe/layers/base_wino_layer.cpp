@@ -611,9 +611,9 @@ namespace caffe {
         Dtype*padded_out;
         cudaError_t rc =cudaMalloc((void **)&padded_out, padded_out_channel_size*out_channels* sizeof(Dtype));
         if (rc != cudaSuccess)
-            printf("Could not allocate memory1: %d", rc);
-        else
-            printf("Yayyyyy1!!!! allocate memory: %d", rc);
+        //     printf("Could not allocate memory1: %d", rc);
+        // else
+        //     printf("Yayyyyy1!!!! allocate memory: %d", rc);
         cudaMemset(padded_out,0, sizeof(Dtype)*padded_out_channel_size*out_channels);
 
 
@@ -621,10 +621,10 @@ namespace caffe {
         // Dtype* padded_input = (Dtype*)malloc(in_channels*padded_channel_size* sizeof(Dtype));
         Dtype*padded_input;
         rc = cudaMalloc((void **)&padded_input, in_channels*padded_channel_size* sizeof(Dtype));
-        if (rc != cudaSuccess)
-            printf("Could not allocate memory2: %d", rc);
-        else
-            printf("Yayyyyy2!!!! allocate memory: %d", rc);
+        // if (rc != cudaSuccess)
+        //     printf("Could not allocate memory2: %d", rc);
+        // else
+        //     printf("Yayyyyy2!!!! allocate memory: %d", rc);
         cudaMemset(padded_input,0, sizeof(Dtype)*in_channels*padded_channel_size);
 
         for (int c=0;c<in_channels;c++)

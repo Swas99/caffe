@@ -166,8 +166,14 @@ namespace caffe {
     void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C) {
          
         // kernel_dim_; 
+
+        int n_patch_width = (W + 1) / 2;
+        int n_patch_height = (H + 1) / 2;
         Dtype *wTransInput;
-        //Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+        cudaMalloc((void **)&wTransInput, 16* B* n_patch_height * n_patch_width * C* sizeof(Dtype));
+        cudaMemset(wTransInput, 16* B* n_patch_height * n_patch_width * C* sizeof(Dtype));
+        
+        Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
     }
 
     template<typename Dtype>
