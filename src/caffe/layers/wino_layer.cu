@@ -163,14 +163,11 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B) {
+    void xxx(const Dtype *input, const Dtype *weights, Dtype *output, int B,int H,int W,int pad_h,int pad_w, int C) {
          
         // kernel_dim_; 
         Dtype *wTransInput;
-
-        printf("B: %d \n", B);
-
-        //Winograd2x2ImTransComputeLauncher(input, wTransInput, in_channels, B, input_h, input_w,pad_h,pad_w);
+        //Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,pad_h,pad_w);
     }
 
     template<typename Dtype>
@@ -199,16 +196,18 @@ namespace caffe {
             Dtype *top_data = top[i]->mutable_gpu_data();
 
 
-            int data;
-            this->get_input_height(data);
-            printf("input_h: %d \n", data);
-            this->get_input_width(data);
-            printf("input_w: %d \n", data);
-            this->get_pad_height(data);
-            printf("pad_h: %d \n", data);
-            this->get_pad_width(data);
-            printf("pad_w: %d \n", data);
-            xxx(bottom_data, weight, top_data, this->num_);
+            int H,W,pad_h,pad_w,C;
+            this->get_input_height(H);
+            this->get_input_width(W);
+            this->get_pad_height(pad_h);
+            this->get_pad_width(pad_w);
+            this->get_conv_in_channels(C);
+            //printf("B: %d \n", this->num_);
+            //printf("input_h: %d \n", H);
+            //printf("input_w: %d \n", w);
+            //printf("pad_h: %d \n", pad_h);
+            //printf("pad_w: %d \n", pad_w);
+            xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C);
 
             const int *kernel_shape_data = this->kernel_shape_.gpu_data();
             for (int n = 0; n < this->num_; ++n) {

@@ -66,6 +66,7 @@ namespace caffe {
         void get_input_height(int &out);
         void get_pad_width(int &out);
         void get_pad_height(int &out);
+        void get_conv_in_channels(int &out);
         
 #endif
 
