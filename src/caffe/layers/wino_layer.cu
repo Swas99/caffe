@@ -267,9 +267,9 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
 
 
-        float *Output;
-        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(float));
-        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(float));    
+        //float *Output;
+        cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
+        cudaMemset(output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
         // Allocate temporary memory
         float *tmp_data_buffer_tensor;
