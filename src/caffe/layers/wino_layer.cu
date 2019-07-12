@@ -289,6 +289,11 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     
     }
 
+
+    void xxx(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+         
+    }
+
     
     template<typename Dtype>
     void WinogradLayer<Dtype>::compute_output_shape() {
