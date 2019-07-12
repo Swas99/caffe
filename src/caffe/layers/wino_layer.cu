@@ -290,6 +290,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     }
 
     
+    template<typename float>
     void WinogradLayer<float>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         const int *stride_data = this->stride_.gpu_data();
@@ -306,6 +307,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         }
     }
 
+    template<typename float>
     void WinogradLayer<float>::Forward_gpu(const vector<Blob<float> *> &bottom,
                                               const vector<Blob<float> *> &top) {
         const float *weight = this->blobs_[0]->gpu_data();
