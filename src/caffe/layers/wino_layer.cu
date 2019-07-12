@@ -361,6 +361,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const Dtype *weight = this->blobs_[0]->gpu_data();
+        const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
             const Dtype *bottom_data = bottom[i]->gpu_data();
             Dtype *top_data = top[i]->mutable_gpu_data();
