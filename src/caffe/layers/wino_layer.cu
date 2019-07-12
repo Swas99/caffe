@@ -153,10 +153,10 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
         
 
-        printf("Transformed input\n");
+        printf("Transformed input:\n");
         for(int i = 0; i<16; i++)
             printf("%.2f ", Output [ i * stride + offset ]);
-        printf("\n");
+        printf(".\n");
     } 
 
     
