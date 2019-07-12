@@ -270,7 +270,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         {
             for(int j=0; j<W; j++)
             {
-                printf("%d ", input[i][j]);
+                printf("%d ", input[i*H + j]);
             }
             printf("\n");
         }
@@ -279,7 +279,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         {
             for(int j=0; j<W; j++)
             {
-                printf("%d ", wTransInput[i][j]);
+                printf("%d ", wTransInput[i*H + j]);
             }
             printf("\n");
         }
