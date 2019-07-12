@@ -257,13 +257,13 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
          
         // kernel_dim_; 
 
-        int nW = (W + 1) / 2;
-        int nH = (H + 1) / 2;
-        float *wTransInput;
-        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
-        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
+        //int nW = (W + 1) / 2;
+        //int nH = (H + 1) / 2;
+        //float *wTransInput;
+        //cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
+        //cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
         
-        Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+        //Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
 
 
 
@@ -337,12 +337,6 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             //printf("pad_h: %d \n", pad_h);
             //printf("pad_w: %d \n", pad_w);
             printf("K: %d \n", kernel_shape_data[0]);
-            printf("K2: %d \n", kernel_shape_data[1]);
-            printf("K3: %d \n", kernel_shape_data[2]);
-            printf("K4: %d \n", kernel_shape_data[3]);
-            printf("K5: %d \n", kernel_shape_data[4]);
-            printf("K6: %d \n", kernel_shape_data[9]);
-            printf("K7: %d \n", kernel_shape_data[18]);
             xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[0]);
 
             //for (int n = 0; n < this->num_; ++n) {
