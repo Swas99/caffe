@@ -328,7 +328,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             this->get_pad_width(pad_w);
             this->get_conv_in_channels(C);
 
-            const int *kernel_shape_data = this->kernel_shape_.gpu_data();
+            const int *kernel_shape_data = this->kernel_shape_.cpu_data();
 
             printf("B: %d \n", this->num_);
             printf("C: %d \n", C);
