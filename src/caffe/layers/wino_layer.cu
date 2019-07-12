@@ -264,10 +264,29 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
         
         Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+        
+        printf("Input data:\n");
+        for(int i = 0; i<H; i++)
+        {
+            for(int j=0; j<W; j++)
+            {
+                printf("%d ", input[i][j]);
+            }
+            printf("\n");
+        }
+        printf("Transformed data:\n");
+        for(int i = 0; i<H; i++)
+        {
+            for(int j=0; j<W; j++)
+            {
+                printf("%d ", wTransInput[i][j]);
+            }
+            printf("\n");
+        }
+        printf("\n");
 
 
 
-        //float *Output;
         cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
         cudaMemset(output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
