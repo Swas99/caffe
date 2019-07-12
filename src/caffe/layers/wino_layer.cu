@@ -153,10 +153,10 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
         
 
-        printf("Transformed input:\n");
-        for(int i = 0; i<16; i++)
-            printf("%.2f ", Output [ i * stride + offset ]);
-        printf(".\n");
+        //printf("Transformed input:\n");
+        //for(int i = 0; i<16; i++)
+        //    printf("%.2f ", Output [ i * stride + offset ]);
+        //printf(".\n");
     } 
 
     
@@ -216,8 +216,8 @@ __global__ void Output_transform(const T *Product, T *Output, int C, int B, int 
     Output[bz*H*W*K + (2*by+1)*W*K + (2*bx+1)*K + tx] = output_patch_3;
 
 
-    printf("Output patch:\n");
-    printf("%.2f %.2f %.2f %.2f\n", output_patch_0,output_patch_1,output_patch_2,output_patch_3);
+    //printf("Output patch:\n");
+    //printf("%.2f %.2f %.2f %.2f\n", output_patch_0,output_patch_1,output_patch_2,output_patch_3);
         
 } 
 
