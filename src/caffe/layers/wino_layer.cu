@@ -330,13 +330,13 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
             const int *kernel_shape_data = this->kernel_shape_.gpu_data();
 
-            //printf("B: %d \n", this->num_);
-            //printf("C: %d \n", C);
-            //printf("input_h: %d \n", H);
-            //printf("input_w: %d \n", W);
-            //printf("pad_h: %d \n", pad_h);
-            //printf("pad_w: %d \n", pad_w);
-            //printf("K: %d \n", kernel_shape_data[0]);
+            printf("B: %d \n", this->num_);
+            printf("C: %d \n", C);
+            printf("input_h: %d \n", H);
+            printf("input_w: %d \n", W);
+            printf("pad_h: %d \n", pad_h);
+            printf("pad_w: %d \n", pad_w);
+            //printf("K: %d \n", kernel_shape_data[i]);
             //xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[0]);
 
             //for (int n = 0; n < this->num_; ++n) {
