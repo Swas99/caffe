@@ -151,6 +151,16 @@ namespace caffe {
         Output [ 13* stride + offset ] = trans_input_patch_13;
         Output [ 14* stride + offset ] = trans_input_patch_14;
         Output [ 15* stride + offset ] = trans_input_patch_15;
+        
+        printf("Transformed input\n");
+        for(int i = 0; i<16; i++)
+            printf("%2f ", Output [ i * stride + offset ]);
+        printf("\n");
+
+        printf("Transformed input\n");
+        for(int i = 0; i<16; i++)
+            printf("%2f ", Output [ i * stride + offset ]);
+        printf("\n");
     } 
 
     
@@ -264,27 +274,6 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
         
         Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
-        
-        printf("Input data:\n");
-        for(int i = 0; i<H; i++)
-        {
-            for(int j=0; j<W; j++)
-            {
-                printf("%2f ", *(input+ (i*H + j)));
-            }
-            printf("\n");
-        }
-        printf("Transformed data:\n");
-        for(int i = 0; i<H; i++)
-        {
-            for(int j=0; j<W; j++)
-            {
-                printf("%2f ", *(wTransInput+ (i*H + j)));
-            }
-            printf("\n");
-        }
-        printf("\n");
-
 
 
         cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
