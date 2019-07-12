@@ -257,35 +257,35 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
          
         // kernel_dim_; 
 
-        //int nW = (W + 1) / 2;
-        //int nH = (H + 1) / 2;
-        //float *wTransInput;
-        //cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
-        //cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
+        int nW = (W + 1) / 2;
+        int nH = (H + 1) / 2;
+        float *wTransInput;
+        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
+        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
         
-        //Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+        Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
 
 
 
-        //float *Output;
-        //cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(float));
-        //cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(float));    
+        float *Output;
+        cudaMalloc((void **)&Output, B* 2*nH * 2*nW * K * sizeof(float));
+        cudaMemset(Output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
         // Allocate temporary memory
-        //float *tmp_data_buffer_tensor;
-        //cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
+        float *tmp_data_buffer_tensor;
+        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
         
-        //long long *tmp_ptr_buffer_tensor;
-        //cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
+        long long *tmp_ptr_buffer_tensor;
+        cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
 
 
         // Set all but the first element of the output tensor to 0.
         //Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
         //tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
 
-        //cudaFree(wTransInput);
-        //cudaFree(tmp_ptr_buffer_tensor);
-        //cudaFree(tmp_data_buffer_tensor);
+        cudaFree(wTransInput);
+        cudaFree(tmp_ptr_buffer_tensor);
+        cudaFree(tmp_data_buffer_tensor);
     
     }
 
