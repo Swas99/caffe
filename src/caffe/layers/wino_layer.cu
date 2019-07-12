@@ -315,7 +315,47 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     template<typename Dtype>
     void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
-        
+        const Dtype *weight = this->blobs_[0]->gpu_data();
+        for (int i = 0; i < bottom.size(); ++i) {
+            const Dtype *bottom_data = bottom[i]->gpu_data();
+            Dtype *top_data = top[i]->mutable_gpu_data();
+
+
+            int H,W,pad_h,pad_w,C;
+            this->get_input_height(H);
+            this->get_input_width(W);
+            this->get_pad_height(pad_h);
+            this->get_pad_width(pad_w);
+            this->get_conv_in_channels(C);
+
+            const int *kernel_shape_data = this->kernel_shape_.gpu_data();
+
+            //printf("B: %d \n", this->num_);
+            //printf("C: %d \n", C);
+            //printf("input_h: %d \n", H);
+            //printf("input_w: %d \n", W);
+            //printf("pad_h: %d \n", pad_h);
+            //printf("pad_w: %d \n", pad_w);
+            //printf("K: %d \n", kernel_shape_data[0]);
+            //xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[0]);
+
+            //for (int n = 0; n < this->num_; ++n) {
+            //    if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
+            //        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+            //                               top_data + n * this->top_dim_);
+            //    else {
+            //        //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
+            //        //                           top_data + n * this->top_dim_);
+            //        this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+            //                               top_data + n * this->top_dim_);
+            //    }
+
+            //    if (this->bias_term_) {
+            //        const Dtype *bias = this->blobs_[1]->gpu_data();
+            //        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+            //    }
+            //}
+        }
     }
 
     
