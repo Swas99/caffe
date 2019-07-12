@@ -340,6 +340,8 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             //xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[0]);
 
             for (int n = 0; n < this->num_; ++n) {
+
+                printf("K: %d \n", kernel_shape_data[i]);
                 if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
                     this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
                                            top_data + n * this->top_dim_);
