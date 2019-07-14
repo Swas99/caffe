@@ -371,7 +371,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
                                                const vector<Blob<Dtype> *> &bottom) {
 
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
-        printf("K: %d \n", kernel_shape_data[i]);
+        printf("K: %d \n", kernel_shape_data[8]);
 
 
         const Dtype *weight = this->blobs_[0]->gpu_data();
