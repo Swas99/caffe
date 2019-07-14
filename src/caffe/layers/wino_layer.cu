@@ -153,10 +153,6 @@ namespace caffe {
         Output [ 15* stride + offset ] = trans_input_patch_15;
         
 
-        //printf("Transformed input:\n");
-        //for(int i = 0; i<16; i++)
-        //    printf("%.2f ", Output [ i * stride + offset ]);
-        //printf(".\n");
     } 
 
     
@@ -373,6 +369,11 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     void WinogradLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
+
+        const int *kernel_shape_data = this->kernel_shape_.gpu_data();
+        printf("K: %d \n", kernel_shape_data[i]);
+
+
         const Dtype *weight = this->blobs_[0]->gpu_data();
         Dtype *weight_diff = this->blobs_[0]->mutable_gpu_diff();
         for (int i = 0; i < top.size(); ++i) {
