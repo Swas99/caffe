@@ -80,8 +80,8 @@ namespace caffe {
                         // this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
                         //                         bottom_diff + n * this->bottom_dim_);
 
-                        this->forward_cpu_winograd(bottom_diff + n * this->bottom_dim_,
-                                                   weight, top_diff + n * this->top_dim_);
+                        this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
+                                                   bottom_diff + n * this->bottom_dim_);
                     }
                 }
             }
