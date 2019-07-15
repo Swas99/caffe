@@ -516,8 +516,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinogradLayer<Dtype>::backward_cpu_bias(Dtype *bias,
-                                                        const Dtype *input) {
+    void BaseWinogradLayer<Dtype>::backward_cpu_bias(Dtype *bias, const Dtype *input) {
         caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
                               input, bias_multiplier_.cpu_data(), 1., bias);
     }
