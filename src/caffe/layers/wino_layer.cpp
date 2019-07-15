@@ -34,10 +34,10 @@ namespace caffe {
                     this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
                                            top_data + n * this->top_dim_);
                 else {
-                    // this->forward_cpu_winograd(bottom_data + n * this->bottom_dim_, weight,
-                    //                            top_data + n * this->top_dim_);
-                    this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
+                    this->forward_cpu_winograd(bottom_data + n * this->bottom_dim_, weight,
+                                               top_data + n * this->top_dim_);
+                    // this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+                    //                        top_data + n * this->top_dim_);
                 }
 
                 if (this->bias_term_) {
@@ -70,16 +70,18 @@ namespace caffe {
                 for (int n = 0; n < this->num_; ++n) {
                     // gradient w.r.t. weight. Note that we will accumulate diffs.
                     if (this->param_propagate_down_[0]) {
-                        this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+                        // this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+                        //                       top_diff + n * this->top_dim_, weight_diff);
+                        this->forward_cpu_winograd(bottom_data + n * this->bottom_dim_,
                                               top_diff + n * this->top_dim_, weight_diff);
                     }
                     // gradient w.r.t. bottom data, if necessary.
                     if (propagate_down[i]) {
-                        this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
-                                                bottom_diff + n * this->bottom_dim_);
+                        // this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
+                        //                         bottom_diff + n * this->bottom_dim_);
 
-                        // this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
-                        //                            bottom_diff + n * this->bottom_dim_);
+                        this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
+                                                   bottom_diff + n * this->bottom_dim_);
                     }
                 }
             }
