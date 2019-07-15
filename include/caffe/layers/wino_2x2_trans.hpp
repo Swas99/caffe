@@ -1,5 +1,5 @@
-#ifndef CAFFE_WINO_LAYER_HPP_
-#define CAFFE_WINO_LAYER_HPP_
+#ifndef CAFFE_WINO_2x2_TRANS_HPP_
+#define CAFFE_WINO_2x2_TRANS_HPP_
 
 #include <vector>
 
@@ -7,7 +7,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/base_wino_layer.hpp"
+#include "caffe/layers/base_wino_2x2.hpp"
 
 namespace caffe {
 
@@ -28,7 +28,7 @@ namespace caffe {
  *   the output channel N' columns of the output matrix.
  */
 template<typename Dtype>
-class WinogradLayer : public BaseWinogradLayer<Dtype> {
+class Winograd2x2TransLayer : public BaseWinograd2x2Layer<Dtype> {
 public:
 /**
  * @param param provides ConvolutionParameter convolution_param,
@@ -61,10 +61,10 @@ public:
  *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
  *    kernels + stream parallelism) engines.
  */
-explicit WinogradLayer(const LayerParameter &param)
-        : BaseWinogradLayer<Dtype>(param) {}
+explicit Winograd2x2TransLayer(const LayerParameter &param)
+        : BaseWinograd2x2Layer<Dtype>(param) {}
 
-virtual inline const char *type() const { return "Winograd"; }
+virtual inline const char *type() const { return "Winograd2x2Trans"; }
 
 protected:
     virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
