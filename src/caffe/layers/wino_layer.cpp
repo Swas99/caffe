@@ -72,7 +72,7 @@ namespace caffe {
                     if (this->param_propagate_down_[0]) {
                         // this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
                         //                       top_diff + n * this->top_dim_, weight_diff);
-                        this->backward_cpu_winograd(bottom_data + n * this->bottom_dim_,
+                        this->forward_cpu_winograd(bottom_data + n * this->bottom_dim_,
                                                    weight_diff, top_diff + n * this->top_dim_);
                     }
                     // gradient w.r.t. bottom data, if necessary.
