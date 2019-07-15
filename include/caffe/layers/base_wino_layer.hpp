@@ -39,6 +39,7 @@ namespace caffe {
                               Dtype *output, bool skip_im2col = false);
         void forward_cpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
         void backward_cpu_winograd(const Dtype *intput,const Dtype* weights, Dtype *output);
+        void backward_cpu_weight_winograd(Dtype *intput,const Dtype* weights, const Dtype *output);
         void winograd_4_4_3_3(Dtype g[3][3], Dtype d[6][6], Dtype Y[4][4]);
         void flatten(const Dtype out_tile[4][4], Dtype *output, const int tile_ind_x, const int tile_ind_y, const int out_channel,
                                     const int out_w, const int out_h);
