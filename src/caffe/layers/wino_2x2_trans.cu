@@ -203,7 +203,7 @@ namespace caffe {
     // }
 
 
-    void xxx(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void yyy(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
     }
 
