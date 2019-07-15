@@ -7,7 +7,7 @@
 namespace caffe {
 
     
-            
+
     // void xxx(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
     //     // kernel_dim_; 
@@ -80,7 +80,7 @@ namespace caffe {
             //this->get_pad_height(pad_h);
             //this->get_pad_width(pad_w);
             //this->get_conv_in_channels(C);
-            //const int *kernel_shape_data = this->kernel_shape_.cpu_data();
+            const int *kernel_shape_data = this->kernel_shape_.cpu_data();
 
             //printf("B: %d \n", this->num_);
             //printf("C: %d \n", C);
