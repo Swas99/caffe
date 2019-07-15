@@ -141,8 +141,8 @@ namespace caffe {
                     if (propagate_down[i]) {
                         //this->backward_gpu_gemm(top_diff + n * this->top_dim_, weight,
                         //                        bottom_diff + n * this->bottom_dim_);
-                       this->forward_gpu_gemm(top_data + n * this->top_dim_, weight,
-                                                bottom_data + n * this->bottom_dim_);
+                       this->forward_gpu_gemm(top_diff + n * this->top_dim_, weight,
+                                                bottom_diff + n * this->bottom_dim_);
                     }
                 }
             }
