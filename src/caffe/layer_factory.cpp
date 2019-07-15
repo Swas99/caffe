@@ -10,6 +10,8 @@
 #include "caffe/layers/clip_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/wino_layer.hpp"
+#include "caffe/layers/wino_2x2_conv.hpp"
+#include "caffe/layers/wino_2x2_trans.hpp"
 #include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
