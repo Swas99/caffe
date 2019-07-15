@@ -35,7 +35,7 @@ layer {
 }
 layer {
   name: "trans1"
-  type: "Winograd2x2TransLayer"
+  type: "Winograd2x2Trans"
   bottom: "data"
   top: "trans1"
   param {
@@ -58,7 +58,7 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Winograd2x2ConvLayer"
+  type: "Winograd2x2Conv"
   bottom: "trans1"
   top: "conv1"
   param {
