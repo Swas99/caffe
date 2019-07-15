@@ -73,11 +73,11 @@ namespace caffe {
                     }
                     // gradient w.r.t. bottom data, if necessary.
                     if (propagate_down[i]) {
-                        //this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
-                                                // bottom_diff + n * this->bottom_dim_);
+                        this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
+                                                bottom_diff + n * this->bottom_dim_);
 
-                        this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
-                                                   bottom_diff + n * this->bottom_dim_);
+                        // this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
+                        //                            bottom_diff + n * this->bottom_dim_);
                     }
                 }
             }
