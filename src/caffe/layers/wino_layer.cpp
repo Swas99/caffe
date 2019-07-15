@@ -46,6 +46,7 @@ namespace caffe {
         }
     }
 
+
     template<typename Dtype>
     void WinogradLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
