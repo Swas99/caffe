@@ -2,7 +2,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/base_wino_2x2.hpp"
+#include "caffe/layers/wino_2x2_conv.hpp"
 
 namespace caffe {
 
