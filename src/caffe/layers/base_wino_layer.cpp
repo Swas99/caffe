@@ -483,7 +483,7 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void BaseWinogradLayer<Dtype>::backward_cpu_winograd(Dtype *input, const Dtype *weights, const Dtype *output) {
+    void BaseWinogradLayer<Dtype>::backward_cpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
 
         //kernel_dim_;
         int in_channels  = conv_in_channels_;
