@@ -213,12 +213,12 @@ namespace caffe {
             Dtype *top_data = top[i]->mutable_gpu_data();
 
 
-            //int H,W,pad_h,pad_w,C;
-            //this->get_input_height(H);
-            //this->get_input_width(W);
-            //this->get_pad_height(pad_h);
-            //this->get_pad_width(pad_w);
-            //this->get_conv_in_channels(C);
+            int H,W,pad_h,pad_w,C;
+            this->get_input_height(H);
+            this->get_input_width(W);
+            this->get_pad_height(pad_h);
+            this->get_pad_width(pad_w);
+            this->get_conv_in_channels(C);
             const int *kernel_shape_data = this->kernel_shape_.cpu_data();
 
             //printf("B: %d \n", this->num_);
