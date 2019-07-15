@@ -54,7 +54,7 @@ namespace caffe {
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
         const Dtype *weight = this->blobs_[0]->cpu_data();
-        float *weight_diff = this->blobs_[0]->mutable_cpu_diff();
+        Dtype *weight_diff = this->blobs_[0]->mutable_cpu_diff();
         for (int i = 0; i < top.size(); ++i) {
             const Dtype *top_diff = top[i]->cpu_diff();
             const Dtype *bottom_data = bottom[i]->cpu_data();
@@ -72,7 +72,7 @@ namespace caffe {
                     if (this->param_propagate_down_[0]) {
                         // this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
                         //                       top_diff + n * this->top_dim_, weight_diff);
-                        this->forward_cpu_winograd(bottom_data + n * this->bottom_dim_,
+                        this->backward_cpu_winograd(bottom_data + n * this->bottom_dim_,
                                                    weight_diff, top_diff + n * this->top_dim_);
                     }
                     // gradient w.r.t. bottom data, if necessary.
@@ -80,7 +80,7 @@ namespace caffe {
                         // this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
                         //                         bottom_diff + n * this->bottom_dim_);
 
-                        this->forward_cpu_winograd(top_diff + n * this->top_dim_, weight,
+                        this->backward_cpu_winograd(top_diff + n * this->top_dim_, weight,
                                                    bottom_diff + n * this->bottom_dim_);
                     }
                 }
