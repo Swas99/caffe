@@ -100,6 +100,6 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     cublasDestroy(handle);
 }
 
-    INSTANTIATE_LAYER_GPU_FUNCS(WinogradConvLayer);
+    //INSTANTIATE_LAYER_GPU_FUNCS(WinogradConvLayer);
 
 }  // namespace caffe
