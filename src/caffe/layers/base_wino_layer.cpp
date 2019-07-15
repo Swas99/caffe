@@ -16,7 +16,7 @@
 namespace caffe {
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
+    void BaseWinogradLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
                                                  const vector<Blob<Dtype> *> &top) {
         // Configure the kernel size, padding, stride, and inputs.
         ConvolutionParameter conv_param = this->layer_param_.convolution_param();
@@ -190,7 +190,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
+    void BaseWinogradLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const int first_spatial_axis = channel_axis_ + 1;
         CHECK_EQ(bottom[0]->num_axes(), first_spatial_axis + num_spatial_axes_)
@@ -262,7 +262,7 @@ namespace caffe {
 
     template<typename Dtype>
 
-    void BaseWinograd2x2Layer<Dtype>::winograd_4_4_3_3(Dtype g[3][3], Dtype d[6][6], Dtype Y[4][4]) {
+    void BaseWinogradLayer<Dtype>::winograd_4_4_3_3(Dtype g[3][3], Dtype d[6][6], Dtype Y[4][4]) {
         memset(Y,0, sizeof(Dtype)*16);
         Dtype BTd[6][6];
         for (int i = 0; i < 6; ++i) {
@@ -329,7 +329,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::flatten(const Dtype out_tile[4][4], Dtype *output, const int tile_ind_x, const int tile_ind_y, const int out_channel,
+    void BaseWinogradLayer<Dtype>::flatten(const Dtype out_tile[4][4], Dtype *output, const int tile_ind_x, const int tile_ind_y, const int out_channel,
                  const int out_w, const int out_h) {
         //flatten tile, putting into output and channel-wise sum
 
@@ -343,7 +343,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_cpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
+    void BaseWinogradLayer<Dtype>::forward_cpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
 
         //kernel_dim_;
         int in_channels  = conv_in_channels_;
@@ -456,7 +456,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_cpu_gemm(const Dtype *input,
+    void BaseWinogradLayer<Dtype>::forward_cpu_gemm(const Dtype *input,
                                                        const Dtype *weights, Dtype *output, bool skip_im2col) {
         const Dtype *col_buff = input;
         if (!is_1x1_) {
@@ -474,7 +474,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_cpu_bias(Dtype *output,
+    void BaseWinogradLayer<Dtype>::forward_cpu_bias(Dtype *output,
                                                        const Dtype *bias) {
         caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
                               out_spatial_dim_, 1, (Dtype) 1., bias, bias_multiplier_.cpu_data(),
@@ -482,7 +482,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::backward_cpu_gemm(const Dtype *output,
+    void BaseWinogradLayer<Dtype>::backward_cpu_gemm(const Dtype *output,
                                                         const Dtype *weights, Dtype *input) {
         Dtype *col_buff = col_buffer_.mutable_cpu_data();
         if (is_1x1_) {
@@ -500,7 +500,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::weight_cpu_gemm(const Dtype *input,
+    void BaseWinogradLayer<Dtype>::weight_cpu_gemm(const Dtype *input,
                                                       const Dtype *output, Dtype *weights) {
         const Dtype *col_buff = input;
         if (!is_1x1_) {
@@ -516,7 +516,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::backward_cpu_bias(Dtype *bias, const Dtype *input) {
+    void BaseWinogradLayer<Dtype>::backward_cpu_bias(Dtype *bias, const Dtype *input) {
         caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
                               input, bias_multiplier_.cpu_data(), 1., bias);
     }
@@ -525,38 +525,38 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::get_input_width(int &out)
+    void BaseWinogradLayer<Dtype>::get_input_width(int &out)
     {
         out = conv_input_shape_.cpu_data()[2];
     }
     
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::get_input_height(int &out)
+    void BaseWinogradLayer<Dtype>::get_input_height(int &out)
     {
         out = conv_input_shape_.cpu_data()[1];
     }
     
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::get_pad_width(int &out)
+    void BaseWinogradLayer<Dtype>::get_pad_width(int &out)
     {
         out = pad_.cpu_data()[1];
     }
     
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::get_pad_height(int &out)
+    void BaseWinogradLayer<Dtype>::get_pad_height(int &out)
     {
         out = pad_.cpu_data()[0];
     }
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::get_conv_in_channels(int &out)
+    void BaseWinogradLayer<Dtype>::get_conv_in_channels(int &out)
     {
         out = conv_in_channels_;
     }
     
 
     template<typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
+    void BaseWinogradLayer<Dtype>::forward_gpu_winograd(const Dtype *input, const Dtype *weights, Dtype *output) {
         
         // kernel_dim_;
         int in_channels  = conv_in_channels_;
@@ -687,7 +687,7 @@ namespace caffe {
 
 
     template <typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_gpu_gemm(const Dtype* input,
+    void BaseWinogradLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
         const Dtype* weights, Dtype* output, bool skip_im2col) {
       
       //forward_gpu_winograd(input, weights,output);
@@ -707,7 +707,7 @@ namespace caffe {
     }
 
     template <typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::forward_gpu_bias(Dtype* output,
+    void BaseWinogradLayer<Dtype>::forward_gpu_bias(Dtype* output,
         const Dtype* bias) {
       caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
           out_spatial_dim_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
@@ -715,7 +715,7 @@ namespace caffe {
     }
 
     template <typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::backward_gpu_gemm(const Dtype* output,
+    void BaseWinogradLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
         const Dtype* weights, Dtype* input) {
       Dtype* col_buff = col_buffer_.mutable_gpu_data();
       if (is_1x1_) {
@@ -733,7 +733,7 @@ namespace caffe {
     }
 
     template <typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::weight_gpu_gemm(const Dtype* input,
+    void BaseWinogradLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
         const Dtype* output, Dtype* weights) {
       const Dtype* col_buff = input;
       if (!is_1x1_) {
@@ -749,7 +749,7 @@ namespace caffe {
     }
 
     template <typename Dtype>
-    void BaseWinograd2x2Layer<Dtype>::backward_gpu_bias(Dtype* bias,
+    void BaseWinogradLayer<Dtype>::backward_gpu_bias(Dtype* bias,
         const Dtype* input) {
       caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
           input, bias_multiplier_.gpu_data(), 1., bias);
@@ -757,6 +757,6 @@ namespace caffe {
 
 #endif  // !CPU_ONLY
 
-    INSTANTIATE_CLASS(BaseWinograd2x2Layer);
+    INSTANTIATE_CLASS(BaseWinogradLayer);
 
 }  // namespace caffe
