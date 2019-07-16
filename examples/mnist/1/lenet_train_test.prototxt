@@ -85,48 +85,8 @@ layer {
   }
 }
 layer {
-  name: "trans1"
-  type: "Winograd2x2Trans"
-  bottom: "data"
-  top: "trans1"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 20
-    kernel_size: 2
-    stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "conv1"
-  type: "Winograd2x2Conv"
-  bottom: "trans1"
-  top: "conv1"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
-  }
-  convolution_param {
-    num_output: 20
-    kernel_size: 2
-    stride: 1
-  }
-}
-layer {
   name: "conv2"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "pool1"
   top: "conv2"
   param {
