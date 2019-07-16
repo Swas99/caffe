@@ -71,12 +71,6 @@ layer {
     num_output: 20
     kernel_size: 2
     stride: 1
-    weight_filler {
-      type: "xavier"
-    }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
 layer {
@@ -87,13 +81,39 @@ layer {
   pooling_param {
     pool: MAX
     kernel_size: 2
-    stride: 2
+    stride: 1
+  }
+}
+layer {
+  name: "trans2"
+  type: "Winograd2x2Trans"
+  bottom: "pool1"
+  top: "trans2"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+    #decay_mult: 1.0
+    #kernel_shape_decay_mult: 0.0
+    #breadth_decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 layer {
   name: "conv2"
-  type: "Winograd"
-  bottom: "pool1"
+  type: "Winograd2x2Conv"
+  bottom: "trans2"
   top: "conv2"
   param {
     lr_mult: 1
@@ -124,7 +144,7 @@ layer {
   pooling_param {
     pool: MAX
     kernel_size: 2
-    stride: 2
+    stride: 1
   }
 }
 layer {
