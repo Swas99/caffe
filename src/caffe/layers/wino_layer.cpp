@@ -3,7 +3,7 @@
 #include "caffe/layers/wino_layer.hpp"
 
 namespace caffe {
-    
+
     template<typename Dtype>
     void WinogradLayer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.cpu_data();

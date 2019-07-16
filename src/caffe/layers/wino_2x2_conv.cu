@@ -102,42 +102,29 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
 
 
 
-    // void xxx(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void WinogradConvolution(const float *wTransInput, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
-    //     // kernel_dim_; 
+        // kernel_dim_; 
+        cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
+        cudaMemset(output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
-    //     int nW = (W + 1) / 2;
-    //     int nH = (H + 1) / 2;
-    //     float *wTransInput;
-    //     cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
-    //     cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
+        // Allocate temporary memory
+        float *tmp_data_buffer_tensor;
+        cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
         
-    //     Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+        long long *tmp_ptr_buffer_tensor;
+        cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
 
 
-    //     cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
-    //     cudaMemset(output,0, B* 2*nH * 2*nW * K * sizeof(float));    
-
-    //     // Allocate temporary memory
-    //     float *tmp_data_buffer_tensor;
-    //     cudaMalloc((void **)&tmp_data_buffer_tensor, 16 * nH * nW * B * K * sizeof(float));
-        
-    //     long long *tmp_ptr_buffer_tensor;
-    //     cudaMalloc((void **)&tmp_ptr_buffer_tensor, 3 * 16 * sizeof(long long));
+        // Set all but the first element of the output tensor to 0.
+        Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
+        tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
+        cudaFree(tmp_ptr_buffer_tensor);
+        cudaFree(tmp_data_buffer_tensor);
+    }
 
 
-    //     // Set all but the first element of the output tensor to 0.
-    //     Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
-    //     tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
-
-    //     cudaFree(wTransInput);
-    //     cudaFree(tmp_ptr_buffer_tensor);
-    //     cudaFree(tmp_data_buffer_tensor);
-    
-    // }
-
-
-    void zzz(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void WinogradConvolution(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
     }
 
@@ -169,12 +156,12 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             Dtype *top_data = top[i]->mutable_gpu_data();
 
 
-            //int H,W,pad_h,pad_w,C;
-            //this->get_input_height(H);
-            //this->get_input_width(W);
-            //this->get_pad_height(pad_h);
-            //this->get_pad_width(pad_w);
-            //this->get_conv_in_channels(C);
+            int H,W,pad_h,pad_w,C;
+            this->get_input_height(H);
+            this->get_input_width(W);
+            this->get_pad_height(pad_h);
+            this->get_pad_width(pad_w);
+            this->get_conv_in_channels(C);
             const int *kernel_shape_data = this->kernel_shape_.cpu_data();
 
             //printf("B: %d \n", this->num_);
@@ -184,24 +171,25 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
             //printf("pad_h: %d \n", pad_h);
             //printf("pad_w: %d \n", pad_w);
             //printf("K: %d \n", kernel_shape_data[i]);
-            //xxx(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[i]);
+            WinogradConvolution(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[i]);
 
-            for (int n = 0; n < this->num_; ++n) {
-                //printf("K: %d \n", kernel_shape_data[i]);
-                if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
-                    this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
-                else {
-                    //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
-                    //                           top_data + n * this->top_dim_);
-                    this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                                           top_data + n * this->top_dim_);
-                }
-                if (this->bias_term_) {
-                    const Dtype *bias = this->blobs_[1]->gpu_data();
-                    this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
-                }
-            }
+        // for (int n = 0; n < this->num_; ++n) {
+        //         //printf("K: %d \n", kernel_shape_data[i]);
+        //         if (kernel_shape_data[i] < 3) //kernel size !=3 has not implemented
+        //             this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+        //                                    top_data + n * this->top_dim_);
+        //         else {
+        //             //this->forward_gpu_winograd(bottom_data + n * this->bottom_dim_, weight,
+        //             //                           top_data + n * this->top_dim_);
+        //             this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+        //                                    top_data + n * this->top_dim_);
+        //         }
+        //         if (this->bias_term_) {
+        //             const Dtype *bias = this->blobs_[1]->gpu_data();
+        //             this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+        //         }
+        //     }
+        
         }
     }
 

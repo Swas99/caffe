@@ -194,7 +194,6 @@ namespace caffe {
         const int *pad_data = this->pad_.gpu_data();
         const int *dilation_data = this->dilation_.gpu_data();
         this->output_shape_.clear();
-        printf("output_dim:\n");
         for (int i = 0; i < this->num_spatial_axes_; ++i) {
             // i + 1 to skip channel axis
             const int input_dim = this->input_shape(i + 1);
@@ -202,10 +201,7 @@ namespace caffe {
             const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
                                    / stride_data[i] + 1;
             this->output_shape_.push_back(output_dim);
-
-            printf("%d ", output_dim);
         }
-        printf("\n");
     }
 
     template<typename Dtype>
