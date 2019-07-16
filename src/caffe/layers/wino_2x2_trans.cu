@@ -167,7 +167,7 @@ namespace caffe {
 
 
 
-    void yyy(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void WinogradTransform(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
         // kernel_dim_; 
 
@@ -181,7 +181,7 @@ namespace caffe {
     }
 
 
-    void yyy(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+    void WinogradTransform(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
     }
 
@@ -194,6 +194,7 @@ namespace caffe {
         const int *pad_data = this->pad_.gpu_data();
         const int *dilation_data = this->dilation_.gpu_data();
         this->output_shape_.clear();
+        printf("output_dim:\n");
         for (int i = 0; i < this->num_spatial_axes_; ++i) {
             // i + 1 to skip channel axis
             const int input_dim = this->input_shape(i + 1);
@@ -201,7 +202,10 @@ namespace caffe {
             const int output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
                                    / stride_data[i] + 1;
             this->output_shape_.push_back(output_dim);
+
+            printf("%d ", output_dim);
         }
+        printf("\n");
     }
 
     template<typename Dtype>
@@ -228,7 +232,7 @@ namespace caffe {
             //printf("pad_h: %d \n", pad_h);
             //printf("pad_w: %d \n", pad_w);
             //printf("K: %d \n", kernel_shape_data[i]);
-            yyy(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[i]);
+            WinogradTransform(bottom_data, weight, top_data, this->num_,H,W,pad_h,pad_w,C,kernel_shape_data[i]);
         }
     }
 
@@ -251,6 +255,7 @@ namespace caffe {
                     this->backward_gpu_bias(bias_diff, top_diff + n * this->top_dim_);
                 }
             }
+
             if (this->param_propagate_down_[0] || propagate_down[i]) {
                 for (int n = 0; n < this->num_; ++n) {
                     // gradient w.r.t. weight. Note that we will accumulate diffs.
@@ -269,7 +274,27 @@ namespace caffe {
         }
     }
 
-    // dim3 threadsPerBlock(C)
+
+    void WinogradGradientTransform(const float *input, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+         
+        // kernel_dim_; 
+
+        int nW = (W + 1) / 2;
+        int nH = (H + 1) / 2;
+        float *wTransInput;
+        cudaMalloc((void **)&wTransInput, 16* B* nH * nW * C* sizeof(float));
+        cudaMemset(wTransInput,0, 16* B* nH * nW * C* sizeof(float));
+        
+        Winograd2x2ImTransComputeLauncher(input, wTransInput, C, B, H, W,1,1);
+    }
+
+
+    void WinogradGradientTransform(const double *input, const double *weights, double *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
+         
+    }
+
+
+// dim3 threadsPerBlock(C)
 // dim3 numBlocks(Batch, nH, nW)
 
 // O = (16, Batch, nH, nW, C)
