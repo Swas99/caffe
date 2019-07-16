@@ -105,6 +105,9 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
     void WinogradConvolution(const float *wTransInput, const float *weights, float *output, int B,int H,int W,int pad_h,int pad_w, int C, int K) {
          
         // kernel_dim_; 
+
+        int nW = (W + 1) / 2;
+        int nH = (H + 1) / 2;
         cudaMalloc((void **)&output, B* 2*nH * 2*nW * K * sizeof(float));
         cudaMemset(output,0, B* 2*nH * 2*nW * K * sizeof(float));    
 
@@ -121,6 +124,7 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
         cudaFree(tmp_ptr_buffer_tensor);
         cudaFree(tmp_data_buffer_tensor);
+    
     }
 
 
