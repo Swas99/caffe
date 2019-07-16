@@ -122,7 +122,6 @@ void Winograd2x2ConvComputeLauncher(const float *Input, const float *Weight, flo
         // Set all but the first element of the output tensor to 0.
         Winograd2x2ConvComputeLauncher(wTransInput, weights, output, 
         tmp_data_buffer_tensor, tmp_ptr_buffer_tensor, C, B, nH, nW, K, 1, 1); 
-        cudaFree(wTransInput);
         cudaFree(tmp_ptr_buffer_tensor);
         cudaFree(tmp_data_buffer_tensor);
     }
