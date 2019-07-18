@@ -11,7 +11,7 @@
 #include <vector>
 #include <immintrin.h>
 #include "SpMP/synk/barrier.hpp"
-#include "boost/*"
+#include "boost/fusion/include/intrinsic.hpp"
 
 #ifdef __AVX512F__
 #ifdef SNIPER
