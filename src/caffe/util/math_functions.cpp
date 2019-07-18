@@ -317,13 +317,13 @@ void caffe_div<double>(const int n, const double* a, const double* b,
 template <>
 void caffe_div_checkzero<float>(const int n, const float* a, const float* b,
     float* y) {
-  // vsDivCheckZero(n, a, b, y);
+  vsDivCheckZero(n, a, b, y);
 }
 
 template <>
 void caffe_div_checkzero<double>(const int n, const double* a, const double* b,
 		double* y) {
-  // vdDivCheckZero(n, a, b, y);
+  vdDivCheckZero(n, a, b, y);
 }
 
 template <>
@@ -334,16 +334,6 @@ void caffe_inv<float>(const int n, const float* a, float* y) {
 template <>
 void caffe_inv<double>(const int n, const double* a, double* y) {
   vdInv(n, a, y);
-}
-
-template <>
-void caffe_sqrt<float>(const int n, const float* a, float* y) {
-  vsSqrt(n, a, y);
-}
-
-template <>
-void caffe_sqrt<double>(const int n, const double* a, double* y) {
-  vdSqrt(n, a, y);
 }
 
 template <>
