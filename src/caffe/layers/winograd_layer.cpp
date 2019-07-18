@@ -114,10 +114,10 @@ void Winograd9Layer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     shape.push_back(tile_w_in_);
     shape.push_back(this->group_);
 
-    in_activation_ptrs_.reset(new Blob<long>(shape));
-    out_activation_ptrs_.reset(new Blob<long>(shape));
-    weight_ptrs_.reset(new Blob<long>(shape));
-    weight_diff_ptrs_.reset(new Blob<long>(shape));
+    in_activation_ptrs_.reset(new Blob<Dtype>(shape));
+    out_activation_ptrs_.reset(new Blob<Dtype>(shape));
+    weight_ptrs_.reset(new Blob<Dtype>(shape));
+    weight_diff_ptrs_.reset(new Blob<Dtype>(shape));
 
     Dtype **in_ptrs = (Dtype **)in_activation_ptrs_->mutable_cpu_data();
     Dtype **out_ptrs = (Dtype **)out_activation_ptrs_->mutable_cpu_data();
