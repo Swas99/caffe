@@ -28,7 +28,7 @@ namespace caffe {
  *   the output channel N' columns of the output matrix.
  */
 template <typename Dtype>
-class WinogradLayer : public BaseConvolutionLayer<Dtype> {
+class Winograd9Layer : public BaseConvolutionLayer<Dtype> {
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
