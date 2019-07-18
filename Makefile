@@ -456,8 +456,8 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 CXXFLAGS += -MMD -MP
 
 #openmp
-CXXFLAGS += -qopenmp
-LINKFLAGS += -qopenmp
+CXXFLAGS += -fopenmp
+LINKFLAGS += -fopenmp
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
