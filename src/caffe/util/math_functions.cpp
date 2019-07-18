@@ -323,7 +323,7 @@ void caffe_div_checkzero<float>(const int n, const float* a, const float* b,
 template <>
 void caffe_div_checkzero<double>(const int n, const double* a, const double* b,
 		double* y) {
-  vdDivCheckZero(n, a, b, y);
+  //vdDivCheckZero(n, a, b, y);
 }
 
 template <>
