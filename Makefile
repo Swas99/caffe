@@ -508,10 +508,9 @@ endif
 
 all: lib tools examples
 
-libxsmm:
-       $(MAKE) -C src/libxsmm AVX=$(AVX) OPT=$(OPT) DBG=$(DBG) FC=
-SpMP:
-       $(MAKE) -C src/SpMP DBG=$(DBG)
+libxsmm: $(MAKE) -C src/libxsmm AVX=$(AVX) OPT=$(OPT) DBG=$(DBG) FC=
+
+SpMP: $(MAKE) -C src/SpMP DBG=$(DBG)
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
