@@ -23,10 +23,9 @@ namespace caffe {
 template <typename Dtype>
 class Net {
  public:
-  explicit Net(const NetParameter& param, const Net* root_net = NULL);
+  explicit Net(const NetParameter& param);
   explicit Net(const string& param_file, Phase phase,
-      const int level = 0, const vector<string>* stages = NULL,
-      const Net* root_net = NULL);
+      const int level = 0, const vector<string>* stages = NULL);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
@@ -112,9 +111,9 @@ class Net {
    *        another Net.
    */
   void CopyTrainedLayersFrom(const NetParameter& param);
-  void CopyTrainedLayersFrom(const string trained_filename);
-  void CopyTrainedLayersFromBinaryProto(const string trained_filename);
-  void CopyTrainedLayersFromHDF5(const string trained_filename);
+  void CopyTrainedLayersFrom(const string& trained_filename);
+  void CopyTrainedLayersFromBinaryProto(const string& trained_filename);
+  void CopyTrainedLayersFromHDF5(const string& trained_filename);
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false) const;
   /// @brief Writes the net to an HDF5 file.
@@ -175,10 +174,6 @@ class Net {
   inline const vector<shared_ptr<Blob<Dtype> > >& params() const {
     return params_;
   }
-  /// @brief returns the groups of parameters
-    inline const vector<int  >& param_groups() const {
-      return param_groups_;
-    }
   inline const vector<Blob<Dtype>*>& learnable_params() const {
     return learnable_params_;
   }
@@ -189,35 +184,8 @@ class Net {
   inline const vector<float>& params_weight_decay() const {
     return params_weight_decay_;
   }
-  inline const vector<float>& params_breadth_decay() const {
-      return params_breadth_decay_;
-  }
-  inline const vector<float>& params_kernel_shape_decay() const {
-      return params_kernel_shape_decay_;
-  }
-
-  inline const vector< vector<BlockGroupLassoSpec> >& params_block_group_lasso() const {
-      return params_block_group_lasso_;
-  }
-
-  inline const vector< string >& params_regularization_type() const {
-      return params_regularization_type_;
-  }
-
   inline const vector<bool>& has_params_decay() const {
     return has_params_decay_;
-  }
-  inline const vector<bool>& has_params_breadth_decay() const {
-    return has_params_breadth_decay_;
-  }
-  inline const vector<bool>& has_params_kernel_shape_decay() const {
-    return has_params_kernel_shape_decay_;
-  }
-  inline const vector<bool>& has_params_block_group_lasso() const {
-    return has_params_block_group_lasso_;
-  }
-  inline const vector<bool>& has_params_regularization_type() const {
-    return has_params_regularization_type_;
   }
   const map<string, int>& param_names_index() const {
     return param_names_index_;
@@ -259,8 +227,30 @@ class Net {
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
 
-  void PrintTestTime();
-  double GetTotalTime();//{return total_time_;}
+  // Invoked at specific points during an iteration
+  class Callback {
+   protected:
+    virtual void run(int layer) = 0;
+
+    template <typename T>
+    friend class Net;
+  };
+  const vector<Callback*>& before_forward() const { return before_forward_; }
+  void add_before_forward(Callback* value) {
+    before_forward_.push_back(value);
+  }
+  const vector<Callback*>& after_forward() const { return after_forward_; }
+  void add_after_forward(Callback* value) {
+    after_forward_.push_back(value);
+  }
+  const vector<Callback*>& before_backward() const { return before_backward_; }
+  void add_before_backward(Callback* value) {
+    before_backward_.push_back(value);
+  }
+  const vector<Callback*>& after_backward() const { return after_backward_; }
+  void add_after_backward(Callback* value) {
+    after_backward_.push_back(value);
+  }
 
  protected:
   // Helpers for Init.
@@ -287,8 +277,6 @@ class Net {
   string name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
-  /// @brief total testing time
-  double total_time_;
   /// @brief Individual layers in the net
   vector<shared_ptr<Layer<Dtype> > > layers_;
   vector<string> layer_names_;
@@ -323,8 +311,6 @@ class Net {
   vector<Blob<Dtype>*> net_output_blobs_;
   /// The parameters in the network.
   vector<shared_ptr<Blob<Dtype> > > params_;
-  // The group of each parameter blob (for conv)
-  vector<int > param_groups_;//the groups for each learnable_params_
   vector<Blob<Dtype>*> learnable_params_;
   /**
    * The mapping from params_ -> learnable_params_: we have
@@ -340,25 +326,17 @@ class Net {
   /// the weight decay multipliers for learnable_params_
   vector<float> params_weight_decay_;
   vector<bool> has_params_decay_;
-  /// the group lasso weight decay multipliers for breadth regularization
-  vector<float> params_breadth_decay_;
-  vector<bool> has_params_breadth_decay_;
-  /// the group lasso weight decay multipliers for kernel shape regularization
-  vector<float> params_kernel_shape_decay_;
-  vector<bool> has_params_kernel_shape_decay_;
-  /// the block group lasso spec
-  vector< vector<BlockGroupLassoSpec> > params_block_group_lasso_;
-  vector<bool> has_params_block_group_lasso_;
-  /// the regularization type
-  vector<string> params_regularization_type_;
-  vector<bool> has_params_regularization_type_;
   /// The bytes of memory used by this net
   size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
-  /// The root net that actually holds the shared layers in data parallelism
-  const Net* const root_net_;
-  DISABLE_COPY_AND_ASSIGN(Net);
+  // Callbacks
+  vector<Callback*> before_forward_;
+  vector<Callback*> after_forward_;
+  vector<Callback*> before_backward_;
+  vector<Callback*> after_backward_;
+
+DISABLE_COPY_AND_ASSIGN(Net);
 };
 
 

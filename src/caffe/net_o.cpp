@@ -5,36 +5,30 @@
 #include <utility>
 #include <vector>
 
+#ifdef USE_HDF5
 #include "hdf5.h"
+#endif  // USE_HDF5
 
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/cpu_info.hpp" // Intel caffe
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#include "caffe/test/test_caffe_main.hpp"
-#include "caffe/util/benchmark.hpp"
-#include "caffe/layers/winograd_layer.hpp"
-
 namespace caffe {
 
 template <typename Dtype>
-Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
-    : root_net_(root_net) {
+Net<Dtype>::Net(const NetParameter& param) {
   Init(param);
 }
 
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase,
-    const int level, const vector<string>* stages,
-    const Net* root_net)
-    : root_net_(root_net) {
+    const int level, const vector<string>* stages) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
   // Set phase, stages and level
@@ -50,25 +44,6 @@ Net<Dtype>::Net(const string& param_file, Phase phase,
 
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
-  total_time_ = 0;
-  CHECK(Caffe::root_solver() || root_net_)
-      << "root_net_ needs to be set for all non-root solvers";
-
-#ifdef _OPENMP // Intel caffe
-  static bool executed = false;
-  if (!executed) {
-    if (Caffe::mode() == Caffe::GPU) {
-      caffe::cpu::OpenMpManager::setGpuEnabled();
-    } else {
-      caffe::cpu::OpenMpManager::setGpuDisabled();
-    }
-
-    caffe::cpu::OpenMpManager::bindOpenMpThreads();
-    caffe::cpu::OpenMpManager::printVerboseInformation();
-  }
-#endif
-
-
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -94,9 +69,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
-    // For non-root solvers, whether this layer is shared from root_net_.
-    bool share_from_root = !Caffe::root_solver()
-        && root_net_->layers_[layer_id]->ShareInParallel();
     // Inherit phase from net if unset.
     if (!param.layer(layer_id).has_phase()) {
       param.mutable_layer(layer_id)->set_phase(phase_);
@@ -109,13 +81,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << "propagate_down param must be specified "
           << "either 0 or bottom_size times ";
     }
-    if (share_from_root) {
-      LOG(INFO) << "Sharing layer " << layer_param.name() << " from root net";
-      layers_.push_back(root_net_->layers_[layer_id]);
-      layers_[layer_id]->SetShared(true);
-    } else {
-      layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
-    }
+    layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
     layer_names_.push_back(layer_param.name());
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating Layer " << layer_param.name();
@@ -154,19 +120,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
     // After this layer is connected, set it up.
-    if (share_from_root) {
-      // Set up size of top blobs using root_net_
-      const vector<Blob<Dtype>*>& base_top = root_net_->top_vecs_[layer_id];
-      const vector<Blob<Dtype>*>& this_top = this->top_vecs_[layer_id];
-      for (int top_id = 0; top_id < base_top.size(); ++top_id) {
-        this_top[top_id]->ReshapeLike(*base_top[top_id]);
-        LOG(INFO) << "Created top blob " << top_id << " (shape: "
-            << this_top[top_id]->shape_string() <<  ") for shared layer "
-            << layer_param.name();
-      }
-    } else {
-      layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
-    }
+    layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     LOG_IF(INFO, Caffe::root_solver())
         << "Setting up " << layer_names_[layer_id];
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
@@ -212,7 +166,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
   // Also checks if all bottom blobs don't need backward computation (possible
-  // because the skip_propagate_down param) and so we can skip bacward
+  // because the skip_propagate_down param) and so we can skip backward
   // computation for the entire layer
   set<string> blobs_under_loss;
   set<string> blobs_skip_backp;
@@ -481,7 +435,6 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   }
   const int net_param_id = params_.size();
   params_.push_back(layers_[layer_id]->blobs()[param_id]);
-
   param_id_vecs_[layer_id].push_back(net_param_id);
   param_layer_indices_.push_back(make_pair(layer_id, param_id));
   ParamSpec default_param_spec;
@@ -501,26 +454,8 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     learnable_param_ids_.push_back(learnable_param_id);
     has_params_lr_.push_back(param_spec->has_lr_mult());
     has_params_decay_.push_back(param_spec->has_decay_mult());
-    has_params_breadth_decay_.push_back(param_spec->has_breadth_decay_mult());
-    has_params_regularization_type_.push_back(param_spec->has_regularization_type());
-    has_params_kernel_shape_decay_.push_back(param_spec->has_kernel_shape_decay_mult());
-    has_params_block_group_lasso_.push_back(param_spec->block_group_lasso_size());
     params_lr_.push_back(param_spec->lr_mult());
     params_weight_decay_.push_back(param_spec->decay_mult());
-    params_breadth_decay_.push_back(param_spec->breadth_decay_mult());
-    params_regularization_type_.push_back(param_spec->regularization_type());
-    params_kernel_shape_decay_.push_back(param_spec->kernel_shape_decay_mult());
-    vector<BlockGroupLassoSpec> block_spec;
-    for(int i=0;i<param_spec->block_group_lasso_size();i++){
-    	block_spec.push_back(param_spec->block_group_lasso(i));
-    }
-    params_block_group_lasso_.push_back(block_spec);
-    if(layer_param.has_convolution_param()){
-		  param_groups_.push_back(layer_param.convolution_param().group());
-	}
-	else {
-	  param_groups_.push_back(1);
-	}
   } else {
     // Named param blob with name we've seen before: share params
     const int owner_net_param_id = param_names_index_[param_name];
@@ -576,48 +511,6 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
         params_weight_decay_[learnable_param_id] = param_spec->decay_mult();
       }
     }
-    if (param_spec->has_breadth_decay_mult()) {
-	  if (has_params_breadth_decay_[learnable_param_id]) {
-		CHECK_EQ(param_spec->breadth_decay_mult(),
-				params_breadth_decay_[learnable_param_id])
-			<< "Shared param '" << param_name << "' has mismatched breadth_decay_mult.";
-	  } else {
-		  has_params_breadth_decay_[learnable_param_id] = true;
-		  params_breadth_decay_[learnable_param_id] = param_spec->breadth_decay_mult();
-	  }
-	}
-    if (param_spec->has_regularization_type()) {
-	  if (has_params_regularization_type_[learnable_param_id]) {
-		CHECK_EQ(param_spec->regularization_type(),
-				params_regularization_type_[learnable_param_id])
-			<< "Shared param '" << param_name << "' has mismatched regularization_type.";
-	  } else {
-		  has_params_regularization_type_[learnable_param_id] = true;
-		  params_regularization_type_[learnable_param_id] = param_spec->regularization_type();
-	  }
-	}
-    if (param_spec->has_kernel_shape_decay_mult()) {
-	  if (has_params_kernel_shape_decay_[learnable_param_id]) {
-		CHECK_EQ(param_spec->kernel_shape_decay_mult(),
-				params_kernel_shape_decay_[learnable_param_id])
-			<< "Shared param '" << param_name << "' has mismatched kernel_shape_decay_mult.";
-	  } else {
-		  has_params_kernel_shape_decay_[learnable_param_id] = true;
-		  params_kernel_shape_decay_[learnable_param_id] = param_spec->kernel_shape_decay_mult();
-	  }
-	}
-    if (param_spec->block_group_lasso_size()) {
-	  if (has_params_block_group_lasso_[learnable_param_id]) {
-		LOG(FATAL) << "duplicate block_group_lasso among shared params.";
-	  } else {
-		  has_params_block_group_lasso_[learnable_param_id] = true;
-	      vector<BlockGroupLassoSpec> block_spec;
-		  for(int i=0;i<param_spec->block_group_lasso_size();i++){
-			  block_spec.push_back(param_spec->block_group_lasso(i));
-		  }
-		  params_block_group_lasso_[learnable_param_id] = block_spec;
-	  }
-	}
   }
 }
 
@@ -626,44 +519,18 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
-  //Timer timer;
-  //double cur_time_total = 0;
   for (int i = start; i <= end; ++i) {
-	//nvtxRangePushA(layer_names_[i].c_str());
-	//PUSH_RANGE(layer_names_[i].c_str(),i);
-    //timer.Start();
+    for (int c = 0; c < before_forward_.size(); ++c) {
+      before_forward_[c]->run(i);
+    }
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
-    //timer.Stop();
-    //nvtxRangePop();
-    //POP_RANGE;
-    //cur_time_total += timer.MicroSeconds();
-    //LOG(INFO) << "Forwarding " << layer_names_[i] << "\t("<<timer.MicroSeconds()<<" us)";
-    //layers_[i]->SetTestTime( layers_[i]->GetTestTime() + timer.MicroSeconds() );
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
+    for (int c = 0; c < after_forward_.size(); ++c) {
+      after_forward_[c]->run(i);
+    }
   }
-  //LOG(INFO) << "Total time in this iteration: " << "\t("<<cur_time_total<<" us)";
-  //total_time_ += cur_time_total;
   return loss;
-}
-
-
-template <typename Dtype>
-void Net<Dtype>::PrintTestTime(){
-	double total = GetTotalTime();
-	for (int i = 0; i <=layers_.size() - 1; ++i) {
-	    LOG(INFO) << " Test time of " << layer_names_[i]
-	              << "\t"<< (layers_[i]->GetTestTime()/1000)<< " ms ( "<< (100*layers_[i]->GetTestTime()/total) <<" % )";
-	}
-}
-
-template <typename Dtype>
-double Net<Dtype>::GetTotalTime(){
-	double total = 0;
-	for (int i = 0; i <=layers_.size() - 1; ++i) {
-		total += layers_[i]->GetTestTime();
-	}
-	return total;
 }
 
 template <typename Dtype>
@@ -700,18 +567,19 @@ const vector<Blob<Dtype>*>& Net<Dtype>::Forward(
 
 template <typename Dtype>
 void Net<Dtype>::BackwardFromTo(int start, int end) {
-  if(Caffe::mode()==Caffe::CPU){
-//#ifdef USE_MKL
-	  //LOG(FATAL) << "MKL has precision problem?!";
-//#endif
-  }
   CHECK_GE(end, 0);
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
+    for (int c = 0; c < before_backward_.size(); ++c) {
+      before_backward_[c]->run(i);
+    }
     if (layer_need_backward_[i]) {
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
       if (debug_info_) { BackwardDebugInfo(i); }
+    }
+    for (int c = 0; c < after_backward_.size(); ++c) {
+      after_backward_[c]->run(i);
     }
   }
 }
@@ -817,35 +685,12 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       Blob<Dtype>* source_blob = source_layer->blobs()[j].get();
-      bool needToReshapeWinograd = false;
-
-      if (target_blobs[j]->shape() != source_blob->shape()) {
-        if (std::string(source_layer->type()) == "Winograd") {
-          // source layer is already reshaped to Winograd match target layer
-          LOG(INFO) << source_blob->shape_string() << " " << target_blobs[j]->shape_string();
-          WinogradLayer<Dtype> *winograd_layer =
-              (WinogradLayer<Dtype> *)(layers_[target_layer_id].get());
-          winograd_layer->ReshapeToWinograd();
-          needToReshapeWinograd = true;
-        }
-        else if (std::string(source_layer->type()) == "Convolution" &&
-            std::string(layers_[target_layer_id]->type()) == "Winograd") {
-          // target Winograd layer reshaped too early
-          target_blobs[j]->Reshape(source_layer->blobs()[j]->shape());
-          needToReshapeWinograd = true;
-        }
-      }
-
       CHECK(target_blobs[j]->shape() == source_blob->shape())
           << "Cannot share param " << j << " weights from layer '"
           << source_layer_name << "'; shape mismatch.  Source param shape is "
           << source_blob->shape_string() << "; target param shape is "
           << target_blobs[j]->shape_string();
       target_blobs[j]->ShareData(*source_blob);
-
-      if (needToReshapeWinograd) {
-        layers_[target_layer_id]->WeightAlign();
-      }
     }
   }
 }
@@ -908,20 +753,6 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int j = 0; j < target_blobs.size(); ++j) {
       if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
-        if (std::string(source_layer.type()) == "Winograd") {
-          // source layer is already reshaped to Winograd match target layer
-          WinogradLayer<Dtype> *winograd_layer =
-              (WinogradLayer<Dtype> *)(layers_[target_layer_id].get());
-          winograd_layer->ReshapeToWinograd();
-        }
-        else if (std::string(source_layer.type()) == "Convolution" &&
-            std::string(layers_[target_layer_id]->type()) == "Winograd") {
-          // target Winograd layer reshaped too early
-          target_blobs[j]->Reshape(source_layer.blobs(j).shape());
-        }
-      }
-
-      if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
         Blob<Dtype> source_blob;
         const bool kReshape = true;
         source_blob.FromProto(source_layer.blobs(j), kReshape);
@@ -935,15 +766,12 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       const bool kReshape = false;
       target_blobs[j]->FromProto(source_layer.blobs(j), kReshape);
     }
-    //LOG(INFO) << "Aligning Weights";
-    layers_[target_layer_id]->WeightAlign();
   }
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
-  if (trained_filename.size() >= 3 &&
-      trained_filename.compare(trained_filename.size() - 3, 3, ".h5") == 0) {
+void Net<Dtype>::CopyTrainedLayersFrom(const string& trained_filename) {
+  if (H5Fis_hdf5(trained_filename.c_str())) {
     CopyTrainedLayersFromHDF5(trained_filename);
   } else {
     CopyTrainedLayersFromBinaryProto(trained_filename);
@@ -952,14 +780,15 @@ void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
-    const string trained_filename) {
+    const string& trained_filename) {
   NetParameter param;
   ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
   CopyTrainedLayersFrom(param);
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
+void Net<Dtype>::CopyTrainedLayersFromHDF5(const string& trained_filename) {
+#ifdef USE_HDF5
   hid_t file_hid = H5Fopen(trained_filename.c_str(), H5F_ACC_RDONLY,
                            H5P_DEFAULT);
   CHECK_GE(file_hid, 0) << "Couldn't open " << trained_filename;
@@ -1006,6 +835,10 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
   }
   H5Gclose(data_hid);
   H5Fclose(file_hid);
+#else
+  LOG(FATAL) << "CopyTrainedLayersFromHDF5 requires hdf5;"
+             << " compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 template <typename Dtype>
@@ -1022,6 +855,8 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
 
 template <typename Dtype>
 void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#ifdef USE_HDF5
   hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
       H5P_DEFAULT);
   CHECK_GE(file_hid, 0)
@@ -1075,13 +910,16 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
     H5Gclose(diff_hid);
   }
   H5Fclose(file_hid);
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#else
+  LOG(FATAL) << "ToHDF5 requires hdf5; compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 template <typename Dtype>
 void Net<Dtype>::Update() {
   for (int i = 0; i < learnable_params_.size(); ++i) {
     learnable_params_[i]->Update();
-    learnable_params_[i]->Zerout(Solver<Dtype>::getPruneThreshold());
   }
 }
 
