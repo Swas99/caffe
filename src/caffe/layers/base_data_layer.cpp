@@ -36,11 +36,9 @@ template <typename Dtype>
 BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
     const LayerParameter& param)
     : BaseDataLayer<Dtype>(param),
-      prefetch_(param.data_param().prefetch()),
-      prefetch_free_(), prefetch_full_(), prefetch_current_() {
-  for (int i = 0; i < prefetch_.size(); ++i) {
-    prefetch_[i].reset(new Batch<Dtype>());
-    prefetch_free_.push(prefetch_[i].get());
+      prefetch_free_(), prefetch_full_() {
+  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+    prefetch_free_.push(&prefetch_[i]);
   }
 }
 
@@ -48,30 +46,33 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   BaseDataLayer<Dtype>::LayerSetUp(bottom, top);
-
   // Before starting the prefetch thread, we make cpu_data and gpu_data
   // calls so that the prefetch thread does not accidentally make simultaneous
   // cudaMalloc calls when the main thread is running. In some GPUs this
   // seems to cause failures if we do not so.
-  for (int i = 0; i < prefetch_.size(); ++i) {
-    prefetch_[i]->data_.mutable_cpu_data();
+  for (int i = 0; i < PREFETCH_COUNT; ++i) {
+    prefetch_[i].data_.mutable_cpu_data();
     if (this->output_labels_) {
-      prefetch_[i]->label_.mutable_cpu_data();
+      prefetch_[i].label_.mutable_cpu_data();
     }
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    for (int i = 0; i < prefetch_.size(); ++i) {
-      prefetch_[i]->data_.mutable_gpu_data();
+    for (int i = 0; i < PREFETCH_COUNT; ++i) {
+      prefetch_[i].data_.mutable_gpu_data();
       if (this->output_labels_) {
-        prefetch_[i]->label_.mutable_gpu_data();
+        prefetch_[i].label_.mutable_gpu_data();
       }
     }
   }
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
-  StartInternalThread();
+
+  // Only if GPU mode on then we use background threads
+  if (Caffe::mode() == Caffe::GPU) {
+    StartInternalThread();
+  }
   DLOG(INFO) << "Prefetch initialized.";
 }
 
@@ -91,9 +92,6 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
         batch->data_.data().get()->async_gpu_push(stream);
-        if (this->output_labels_) {
-          batch->label_.data().get()->async_gpu_push(stream);
-        }
         CUDA_CHECK(cudaStreamSynchronize(stream));
       }
 #endif
@@ -109,21 +107,43 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
+// TODO: Make it properlly implemented/integrated with above solution
+template <typename Dtype>
+void BasePrefetchingDataLayer<Dtype>::GetBatch() {
+  try {
+      Batch<Dtype>* batch = prefetch_free_.pop();
+      load_batch(batch);
+      prefetch_full_.push(batch);
+  } catch (boost::thread_interrupted&) {
+    // Interrupted exception is expected on shutdown
+  }
+}
+
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  if (prefetch_current_) {
-    prefetch_free_.push(prefetch_current_);
+  // Here for CPU we do transformation
+  if (Caffe::mode() == Caffe::CPU) {
+    this->GetBatch();
   }
-  prefetch_current_ = prefetch_full_.pop("Waiting for data");
+  Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
   // Reshape to loaded data.
-  top[0]->ReshapeLike(prefetch_current_->data_);
-  top[0]->set_cpu_data(prefetch_current_->data_.mutable_cpu_data());
+  top[0]->ReshapeLike(batch->data_);
+  // Copy the data
+  caffe_copy(batch->data_.count(), batch->data_.cpu_data(),
+             top[0]->mutable_cpu_data());
+  DLOG(INFO) << "Prefetch copied";
   if (this->output_labels_) {
     // Reshape to loaded labels.
-    top[1]->ReshapeLike(prefetch_current_->label_);
-    top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
+    top[1]->ReshapeLike(batch->label_);
+    // Copy the labels.
+    caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
+        top[1]->mutable_cpu_data());
   }
+
+  // TODO: Consider prefetch_data_array and prefetch_label_array
+
+  prefetch_free_.push(batch);
 }
 
 #ifdef CPU_ONLY
