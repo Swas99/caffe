@@ -5,7 +5,7 @@
 #include <ctime>
 
 #include <omp.h>
-#include </opt/cuda/include/cusparse_v2.h>
+#include </opt/cuda/include/cusparse.h>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"

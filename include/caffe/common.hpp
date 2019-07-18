@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-#include </opt/cuda/include/cusparse_v2.h>
+#include </opt/cuda/include/cusparse.h>
 #include </opt/intel/mkl/include/mkl_lapacke.h>
 
 
