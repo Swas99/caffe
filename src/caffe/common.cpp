@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+  
+#include <omp.h>
 
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
