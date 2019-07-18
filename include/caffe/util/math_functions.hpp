@@ -61,6 +61,9 @@ template <typename Dtype>
 void caffe_sqr(const int N, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
+void caffe_sqrt(const int N, const Dtype* a, Dtype* y);
+
+template <typename Dtype>
 void caffe_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 
 template <typename Dtype>
