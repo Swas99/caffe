@@ -6,6 +6,7 @@
 
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -19,7 +20,6 @@ namespace caffe {
   */
   namespace SolverAction {
     enum Enum {
-      UNKNOWN = -1,
       NONE = 0,  // Take no special action.
       STOP = 1,  // Stop training. snapshot_after_train controls whether a
                  // snapshot is created.
@@ -41,9 +41,8 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param,
-      const Solver* root_solver = NULL);
-  explicit Solver(const string& param_file, const Solver* root_solver = NULL);
+  explicit Solver(const SolverParameter& param);
+  explicit Solver(const string& param_file);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -56,7 +55,7 @@ class Solver {
   // The main entry of the solver function. In default, iter will be zero. Pass
   // in a non-zero iter number to resume training for a pre-trained net.
   virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) { Solve(resume_file.c_str()); }
+  inline void Solve(const string& resume_file) { Solve(resume_file.c_str()); }
   void Step(int iters);
   // The Restore method simply dispatches to one of the
   // RestoreSolverStateFrom___ protected methods. You should implement these
@@ -73,7 +72,7 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  int iter() const { return iter_; }
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -95,15 +94,11 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
 
-  static Dtype getPruneThreshold() { return prune_threshold_; }
-  static Dtype getMeasureThreshold() { return measure_threshold_; }
-
-  virtual void checkIfLearnableParameterResized() { }
-
- protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
-  string SnapshotFilename(const string extension);
+
+ protected:
+  string SnapshotFilename(const string& extension);
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();
   // The test routine
@@ -120,13 +115,9 @@ class Solver {
   int current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
-  Dtype total_regularization_term_;
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
-  // The root solver that holds root nets (actually containing shared layers)
-  // in data parallelism
-  const Solver* const root_solver_;
 
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
@@ -135,33 +126,11 @@ class Solver {
   // True iff a request to stop early was received.
   bool requested_early_exit_;
 
-  static Dtype prune_threshold_, measure_threshold_;
+  // Timing information, handy to tune e.g. nbr of GPUs
+  Timer iteration_timer_;
+  float iterations_last_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
-};
-
-/**
- * @brief Solver that only computes gradients, used as worker
- *        for multi-GPU training.
- */
-template <typename Dtype>
-class WorkerSolver : public Solver<Dtype> {
- public:
-  explicit WorkerSolver(const SolverParameter& param,
-      const Solver<Dtype>* root_solver = NULL)
-      : Solver<Dtype>(param, root_solver) {}
-
- protected:
-  void ApplyUpdate() {}
-  void SnapshotSolverState(const string& model_filename) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
-  void RestoreSolverStateFromBinaryProto(const string& state_file) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
-  void RestoreSolverStateFromHDF5(const string& state_file) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
 };
 
 }  // namespace caffe
