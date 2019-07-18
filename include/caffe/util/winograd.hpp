@@ -2,7 +2,6 @@
 #define CAFFE_UTIL_WINOGRAD_H_
 
 #include "caffe/blob.hpp"
-#include "lapacke.h"
 
 /**
  * compute Kronecker product of in1 and in2, where in1 is a m by n matrix and in2 is a p by q matrix
