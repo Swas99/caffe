@@ -10,7 +10,7 @@
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/util/benchmark.hpp"
+
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
@@ -38,7 +38,7 @@ class Layer {
    * layer.
    */
   explicit Layer(const LayerParameter& param)
-    : layer_param_(param), is_shared_(false) {
+    : layer_param_(param) {
       // Set phase and copy blobs (if there are any).
       phase_ = param.phase();
       if (layer_param_.blobs_size() > 0) {
@@ -48,7 +48,6 @@ class Layer {
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
-      test_time_ = 0;
     }
   virtual ~Layer() {}
 
@@ -67,12 +66,10 @@ class Layer {
    */
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-    InitMutex();
     CheckBlobCounts(bottom, top);
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
-    //WeightAlign();
   }
 
   /**
@@ -93,41 +90,6 @@ class Layer {
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
-
-  /*
-   * typically for convolutional layers, to align nonzero weights together
-   * */
-  virtual void WeightAlign() {}
-
-  /*
-   * time consumption
-   * */
-  virtual double GetTestTime() { return test_time_;}
-  virtual void SetTestTime(double t) { test_time_ = t;}
-
-  /**
-   * @brief Whether a layer should be shared by multiple nets during data
-   *        parallelism. By default, all layers except for data layers should
-   *        not be shared. data layers should be shared to ensure each worker
-   *        solver access data sequentially during data parallelism.
-   */
-  virtual inline bool ShareInParallel() const { return false; }
-
-  /** @brief Return whether this layer is actually shared by other nets.
-   *         If ShareInParallel() is true and using more than one GPU and the
-   *         net has TRAIN phase, then this function is expected return true.
-   */
-  inline bool IsShared() const { return is_shared_; }
-
-  /** @brief Set whether this layer is actually shared by other nets
-   *         If ShareInParallel() is true and using more than one GPU and the
-   *         net has TRAIN phase, then is_shared should be set true.
-   */
-  inline void SetShared(bool is_shared) {
-    CHECK(ShareInParallel() || !is_shared)
-        << type() << "Layer does not support sharing.";
-    is_shared_ = is_shared;
-  }
 
   /**
    * @brief Adjust the shapes of top blobs and internal buffers to accommodate
@@ -344,8 +306,6 @@ class Layer {
    *  the objective function. */
   vector<Dtype> loss_;
 
-  double test_time_;
-
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) = 0;
@@ -443,19 +403,6 @@ class Layer {
   }
 
  private:
-  /** Whether this layer is actually shared by other nets*/
-  bool is_shared_;
-
-  /** The mutex for sequential forward if this layer is shared */
-  shared_ptr<boost::mutex> forward_mutex_;
-
-  /** Initialize forward_mutex_ */
-  void InitMutex();
-  /** Lock forward_mutex_ if this layer is shared */
-  void Lock();
-  /** Unlock forward_mutex_ if this layer is shared */
-  void Unlock();
-
   DISABLE_COPY_AND_ASSIGN(Layer);
 };  // class Layer
 
@@ -465,29 +412,21 @@ class Layer {
 template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  // Lock during forward to ensure sequential forward
-  Lock();
   Dtype loss = 0;
-  Timer timer;
   Reshape(bottom, top);
   switch (Caffe::mode()) {
   case Caffe::CPU:
-	timer.Start();
     Forward_cpu(bottom, top);
-    timer.Stop();
     for (int top_id = 0; top_id < top.size(); ++top_id) {
-      if (this->loss(top_id)) {
-        const int count = top[top_id]->count();
-        const Dtype* data = top[top_id]->cpu_data();
-        const Dtype* loss_weights = top[top_id]->cpu_diff();
-        loss += caffe_cpu_dot(count, data, loss_weights);
-      }
+      if (!this->loss(top_id)) { continue; }
+      const int count = top[top_id]->count();
+      const Dtype* data = top[top_id]->cpu_data();
+      const Dtype* loss_weights = top[top_id]->cpu_diff();
+      loss += caffe_cpu_dot(count, data, loss_weights);
     }
     break;
   case Caffe::GPU:
-	timer.Start();
     Forward_gpu(bottom, top);
-    timer.Stop();
 #ifndef CPU_ONLY
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
@@ -503,9 +442,6 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-  test_time_ = timer.MicroSeconds();
-  Unlock();
-  //LOG(INFO)<<"Test time of "<< layer_param_.name()<<":\t"<< (test_time_/1000)<<"\t\tms";
   return loss;
 }
 
