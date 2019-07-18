@@ -7,6 +7,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/winograd.hpp"
 
 namespace caffe {
 
@@ -43,6 +44,86 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
 }
 
 template <>
+void caffe_gpu_sparse_mmcsr<float>(const int M, const int N, const int K,
+    const float alpha, const float* A,
+    const int nnz, const float* B_nonzero_buf, const int* B_idx_pointer_buf, const int* B_nonzero_idx_buf,
+    const float beta,float* C){
+	// For cuSPARSE, dense matrix A & C is column major, so we can instead compute C'=B'*A'
+	// A & C are intrinsically transposed since c/c++ array is row major
+
+	// as sparse B is expressed in CSR format, and CSC of B'is the same with CSR of B
+	// use cusparse<t>cscmm if available, if not, transpose B (transposing may not affect the performance as above reason)
+	//NON-BLOCKING NON-BLOCKING NON-BLOCKING
+	CUSPARSE_CHECK(cusparseScsrmm(Caffe::cusparse_handle(),CUSPARSE_OPERATION_TRANSPOSE,
+			//N,M,K,nnz, &alpha,
+			K,M,N,nnz, &alpha,
+			Caffe::cusparse_matdescr(), B_nonzero_buf, B_idx_pointer_buf, B_nonzero_idx_buf,
+			A,K,&beta,C,N
+			));
+}
+
+template <>
+void caffe_gpu_sparse_mmcsr<double>(const int M, const int N, const int K,
+    const double alpha, const double* A,
+    const int nnz, const double* B_nonzero_buf, const int* B_idx_pointer_buf, const int* B_nonzero_idx_buf,
+    const double beta,double* C){
+	//NON-BLOCKING NON-BLOCKING NON-BLOCKING
+	CUSPARSE_CHECK(cusparseDcsrmm(Caffe::cusparse_handle(),CUSPARSE_OPERATION_TRANSPOSE,
+				N,M,K,nnz, &alpha,
+				Caffe::cusparse_matdescr(), B_nonzero_buf, B_idx_pointer_buf, B_nonzero_idx_buf,
+				A,K,&beta,C,N
+				));
+}
+
+template <>
+void caffe_gpu_sparse_dense2csr<float>(const int M, const int N,
+    const float* A, int* nnzPerRow,
+    float* A_nonzero_buf, int* A_idx_pointer_buf, int* A_nonzero_idx_buf, int *nnz_total){
+	//cusparse<t>nnz() NON-BLOCKING
+	//int nnz_total = 0;
+	CUSPARSE_CHECK(cusparseSnnz(Caffe::cusparse_handle(),
+			CUSPARSE_DIRECTION_COLUMN,
+			N,M,
+			Caffe::cusparse_matdescr(),
+			A,N,
+			nnzPerRow,//per row for c style row-major matrix
+			nnz_total
+			));
+
+	CUSPARSE_CHECK(cusparseSdense2csc(Caffe::cusparse_handle(),
+			N,M,
+			Caffe::cusparse_matdescr(),
+			A,N,
+			nnzPerRow,//per row for c style row-major matrix
+			A_nonzero_buf,A_nonzero_idx_buf,A_idx_pointer_buf
+			));
+}
+
+template <>
+void caffe_gpu_sparse_dense2csr<double>(const int M, const int N,
+    const double* A, int* nnzPerRow,
+    double* A_nonzero_buf, int* A_idx_pointer_buf, int* A_nonzero_idx_buf,int *nnz_total){
+	//cusparse<t>nnz() NON-BLOCKING
+	//int nnz_total = 0;
+	CUSPARSE_CHECK(cusparseDnnz(Caffe::cusparse_handle(),
+			CUSPARSE_DIRECTION_COLUMN,
+			N,M,
+			Caffe::cusparse_matdescr(),
+			A,N,
+			nnzPerRow,//per row for c style row-major matrix
+			nnz_total
+			));
+
+	CUSPARSE_CHECK(cusparseDdense2csc(Caffe::cusparse_handle(),
+			N,M,
+			Caffe::cusparse_matdescr(),
+			A,N,
+			nnzPerRow,//per row for c style row-major matrix
+			A_nonzero_buf,A_nonzero_idx_buf,A_idx_pointer_buf
+			));
+}
+
+template <>
 void caffe_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
     const float beta, float* y) {
@@ -75,8 +156,241 @@ void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
 }
 
 template <>
-void caffe_gpu_axpy<long>(const int N, const long alpha, const long* X,
-    long* Y);
+void caffe_gpu_axpy<unsigned long>(const int N, const unsigned long alpha, const unsigned long* X,
+    unsigned long* Y) {
+	NOT_IMPLEMENTED;
+}
+
+
+
+template  <typename Dtype>
+__global__ void zerout_kernel(void * mutable_gpu_data, int count, Dtype thre){
+	//Dtype thre = Dtype(th);
+	Dtype* data_ptr_tmp =  static_cast<Dtype*>(mutable_gpu_data);
+		//  for(int i=0;i<count;i++){
+		//	  if(data_ptr_tmp[i]<thre && data_ptr_tmp[i]>(-thre)){
+		//		  data_ptr_tmp[i]=0;
+		//	  }
+		//  }
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<count){
+		if(data_ptr_tmp[tid]<=thre && data_ptr_tmp[tid]>=(-thre)){
+			data_ptr_tmp[tid] = 0;
+		}
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template  <typename Dtype>
+__global__ void zerout_kernel(int count, const Dtype *x, Dtype *y, Dtype thre){
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<count){
+		if(x[tid]<=thre && x[tid]>=(-thre)){
+			y[tid] = 0;
+		}
+    else {
+      y[tid] = x[tid];
+    }
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template  <typename Dtype>
+__global__ void zerout_kernel2(int count, Dtype *x, const Dtype *thresholds, int thresholds_len, Dtype weight){
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<count){
+    Dtype thre = thresholds[tid%thresholds_len]*weight;
+		if(x[tid]<=thre && x[tid]>=(-thre)){
+			x[tid] = 0;
+		}
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template <typename Dtype>
+void caffe_gpu_zerout(void * mutable_gpu_data, const int count, Dtype th){
+	zerout_kernel<<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, (Dtype *)mutable_gpu_data, (Dtype *)mutable_gpu_data, th);
+}
+
+template <typename Dtype>
+void caffe_gpu_zerout(int count, const Dtype *x, Dtype *y, Dtype thre){
+	zerout_kernel<<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, x, y, thre);
+}
+
+template <typename Dtype>
+void caffe_gpu_zerout(int count, Dtype *x, const Dtype *thresholds, int thresholds_len, Dtype weight){
+	zerout_kernel2<<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(count, x, thresholds, thresholds_len, weight);
+}
+
+template void caffe_gpu_zerout<int>(void * mutable_gpu_data, const int count, int th);
+template void caffe_gpu_zerout<unsigned int>(void * mutable_gpu_data, const int count, unsigned int th);
+template void caffe_gpu_zerout<long>(void * mutable_gpu_data, const int count, long th);
+template void caffe_gpu_zerout<unsigned long>(void * mutable_gpu_data, const int count, unsigned long th);
+template void caffe_gpu_zerout<float>(void * mutable_gpu_data, const int count, float th);
+template void caffe_gpu_zerout<double>(void * mutable_gpu_data, const int count, double th);
+
+template void caffe_gpu_zerout<int>(int count, const int *x, int *y, int th);
+template void caffe_gpu_zerout<unsigned int>(int count, const unsigned int *x, unsigned int *y, unsigned int th);
+template void caffe_gpu_zerout<long>(int count, const long *x, long *y, long th);
+template void caffe_gpu_zerout<float>(int count, const float *x, float *y, float th);
+template void caffe_gpu_zerout<double>(int count, const double *x, double *y, double th);
+
+template void caffe_gpu_zerout<float>(int count, float *x, const float *thresholds, int thresholds_len, float weight);
+template void caffe_gpu_zerout<double>(int count, double *x, const double *thresholds, int thresholds_len, double weight);
+
+/*template  <typename Dtype>
+__global__ void if_zerout_fiber_kernel(
+  int I, int J, int K, const Dtype *x, Dtype * y, int mode, Dtype thre)
+{
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+
+  if (0 == mode) {
+    int nfiber = J*K;
+    while (tid < nfiber) {
+      int is_zero = 1;
+      for (int i = 0; i < I; ++i) {
+        if (x[i*J*K + tid] > thre || x[i*J*K + tid] < -thre) {
+          is_zero = 0;
+          break;
+        }
+      }
+
+      y[tid] = is_zero;
+
+      tid += gridDim.x*blockDim.x;
+    }
+  }
+  else if (1 == mode) {
+    int nfiber = J*K;
+    while (tid < nfiber) {
+      int is_zero = 1;
+      for (int i = 0; i < I; ++i) {
+        if (x[i*J*K + tid] > thre || x[i*J*K + tid] < -thre) {
+          is_zero = 0;
+          break;
+        }
+      }
+
+      y[tid] = is_zero;
+
+      tid += gridDim.x*blockDim.x;
+    }
+  }
+  else {
+  }
+}*/
+
+template  <typename Dtype>
+__global__ void shrinkage_kernel(void * mutable_gpu_data, int count, Dtype thre){
+	//Dtype thre = Dtype(th);
+	Dtype* data_ptr_tmp =  static_cast<Dtype*>(mutable_gpu_data);
+		//  for(int i=0;i<count;i++){
+		//	  if(data_ptr_tmp[i]<thre && data_ptr_tmp[i]>(-thre)){
+		//		  data_ptr_tmp[i]=0;
+		//	  }
+		//  }
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<count){
+		if(data_ptr_tmp[tid]<thre && data_ptr_tmp[tid]>(-thre)){
+			data_ptr_tmp[tid] = 0;
+		}
+        else if (data_ptr_tmp[tid] > 0) {
+            data_ptr_tmp[tid] -= thre;
+        }
+        else {
+            data_ptr_tmp[tid] += thre;
+        }
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template <typename Dtype>
+void caffe_gpu_shrinkage(void * mutable_gpu_data, const int count, Dtype th){
+	shrinkage_kernel<<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(mutable_gpu_data,  count,  th);
+}
+
+template void caffe_gpu_shrinkage<int>(void * mutable_gpu_data, const int count, int th);
+template void caffe_gpu_shrinkage<unsigned int>(void * mutable_gpu_data, const int count, unsigned int th);
+template void caffe_gpu_shrinkage<long>(void * mutable_gpu_data, const int count, long th);
+template void caffe_gpu_shrinkage<float>(void * mutable_gpu_data, const int count, float th);
+template void caffe_gpu_shrinkage<double>(void * mutable_gpu_data, const int count, double th);
+
+
+template  <typename Dtype>
+__global__ void if_zerout_kernel(const int n, const Dtype * x, Dtype *y, Dtype thre){
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<n){
+		y[tid] = (x[tid]<=thre && x[tid]>=(-thre)) ? 1 : 0;
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template  <typename Dtype>
+__global__ void if_zerout_kernel(const int n, const Dtype * x, Dtype *y, const Dtype *thresholds, int thresholds_len, Dtype weight){
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<n){
+    Dtype thre = thresholds[tid%thresholds_len]*weight;
+		y[tid] = (x[tid]<=thre && x[tid]>=(-thre)) ? 1 : 0;
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template <typename Dtype>
+void caffe_gpu_if_zerout(const int n, const Dtype * x, Dtype *y, Dtype th){
+	if_zerout_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(n, x, y, th);
+}
+
+template <typename Dtype>
+void caffe_gpu_if_zerout(const int n, const Dtype * x, Dtype *y, const Dtype *thresholds, int thresholds_len, Dtype weight) {
+	if_zerout_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(n, x, y, thresholds, thresholds_len, weight);
+}
+
+template void caffe_gpu_if_zerout<int>(const int n, const int * x, int *y, int th);
+template void caffe_gpu_if_zerout<unsigned int>(const int n, const unsigned int* x, unsigned int *y, unsigned int th);
+template void caffe_gpu_if_zerout<long>(const int n, const long* x, long *y, long th);
+
+template void caffe_gpu_if_zerout<float>(const int n, const float * x, float *y, float th);
+template void caffe_gpu_if_zerout<double>(const int n, const double* x, double *y, double th);
+
+template void caffe_gpu_if_zerout<float>(const int n, const float * x, float *y, const float *thresholds, int thresholds_len, float weight);
+template void caffe_gpu_if_zerout<double>(const int n, const double* x, double *y, const double *thresholds, int thresholds_len, double weight);
+
+template  <typename Dtype>
+__global__ void if_nonzerout_kernel(const int n, const Dtype * x, Dtype *y, Dtype thre){
+	int tid = threadIdx.x + blockDim.x*blockIdx.x;
+	while(tid<n){
+		y[tid] = (x[tid]<=thre && x[tid]>=(-thre)) ? 0 : 1;
+		tid += gridDim.x*blockDim.x;
+	}
+}
+
+template <typename Dtype>
+void caffe_gpu_if_nonzerout(const int n, const Dtype * x, Dtype *y, Dtype th){
+	if_nonzerout_kernel<<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>(n, x, y, th);
+}
+
+template void caffe_gpu_if_nonzerout<int>(const int n, const int * x, int *y, int th);
+template void caffe_gpu_if_nonzerout<unsigned int>(const int n, const unsigned int* x, unsigned int *y, unsigned int th);
+template void caffe_gpu_if_nonzerout<long>(const int n, const long* x, long*y, long th);
+template void caffe_gpu_if_nonzerout<unsigned long>(const int n, const unsigned long* x, unsigned long*y, unsigned long th);
+
+template void caffe_gpu_if_nonzerout<float>(const int n, const float * x, float *y, float th);
+template void caffe_gpu_if_nonzerout<double>(const int n, const double* x, double *y, double th);
+
+//template <>
+//void caffe_gpu_zerout<int>(void * mutable_gpu_data, int count, int th){
+//	zerout_kernel<<<32768,256>>>(mutable_gpu_data,  count,  th);
+//}
+//
+//template <>
+//void caffe_gpu_zerout<float>(void * mutable_gpu_data, int count, float th){
+//	zerout_kernel<<<32768,256>>>(mutable_gpu_data,  count,  th);
+//}
+//
+//template <>
+//void caffe_gpu_zerout<double>(void * mutable_gpu_data, int count, double th){
+//	zerout_kernel<<<32768,256>>>(mutable_gpu_data,  count,  th);
+//}
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
@@ -95,23 +409,8 @@ void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
 }
 
 template <>
-void caffe_gpu_scal<float>(const int N, const float alpha, float* X,
-                           cudaStream_t str) {
-  cudaStream_t initial_stream;
-  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
-}
-
-template <>
-void caffe_gpu_scal<double>(const int N, const double alpha, double* X,
-                            cudaStream_t str) {
-  cudaStream_t initial_stream;
-  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
+void caffe_gpu_scal<unsigned long>(const int N, const unsigned long alpha, unsigned long *X) {
+	NOT_IMPLEMENTED;
 }
 
 template <>
@@ -141,21 +440,25 @@ void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
 }
 
 template <>
-void caffe_gpu_dot<long>(const int n, const long* x, const long* y,
-    long * out);
-
-template <>
-void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
-  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
+void caffe_gpu_dot<unsigned long>(const int n, const unsigned long* x, const unsigned long* y,
+    unsigned long * out) {
+	NOT_IMPLEMENTED;
 }
 
 template <>
-void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
-  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+void caffe_gpu_asum<float>(const int n, const float* x, float* y, int stride) {
+  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, stride, y));
 }
 
 template <>
-void caffe_gpu_asum<long>(const int n, const long* x, long* y);
+void caffe_gpu_asum<double>(const int n, const double* x, double* y, int stride) {
+  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, stride, y));
+}
+
+template <>
+void caffe_gpu_asum<unsigned long>(const int n, const unsigned long* x, unsigned long* y, int stride) {
+	NOT_IMPLEMENTED;
+}
 
 template <>
 void caffe_gpu_scale<float>(const int n, const float alpha, const float *x,
@@ -171,9 +474,298 @@ void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
   CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
 
+//Usage: dim3 block(c,1); dim3 thread(1,n); col_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+template  <typename Dtype>
+__global__ void col_group_lasso_kernel(const int n, const int c, const Dtype *x, Dtype* y){
+	int n_offset = 0;
+		//initialize y
+		while(n_offset<n){
+			//int idx1 = (n_offset+threadIdx.y)*gridDim.x+blockIdx.x;
+			int idx1 = (n_offset+threadIdx.y)*c+blockIdx.x;
+			if(n_offset+threadIdx.y < n){//BUG: THE N MUST BE MULTIPLE TIMES OF BLOCKDIM.Y IN CURRENT IMPLEMENTATION !!!
+				y[idx1] = x[idx1]*x[idx1];
+			}
+			n_offset += blockDim.y;
+		}
+		__syncthreads();
+
+		//sum along columns
+		n_offset=0;
+		Dtype res = 0;
+		while(n_offset<n){
+			int len = (n_offset + blockDim.y)<n ? blockDim.y : (n-n_offset);//valid threads to process
+			while(len/2>0){
+				if(threadIdx.y<len/2){
+					//int idx1 = (n_offset+threadIdx.y)*gridDim.x+blockIdx.x;
+					//int idx2 = (n_offset+threadIdx.y+(len+1)/2)*gridDim.x+blockIdx.x;
+					int idx1 = (n_offset+threadIdx.y)*c+blockIdx.x;
+					int idx2 = (n_offset+threadIdx.y+(len+1)/2)*c+blockIdx.x;
+					y[idx1] += y[idx2];
+				}
+				__syncthreads();
+				len=(len+1)/2;
+			}
+
+			//res += y[n_offset*gridDim.x+blockIdx.x];
+			res += y[n_offset*c+blockIdx.x];
+			n_offset += blockDim.y;
+		}
+		__syncthreads();
+
+		//copy
+		n_offset=0;
+		while(n_offset<n){
+			//int idx1 = (n_offset+threadIdx.y)*gridDim.x+blockIdx.x;
+			int idx1 = (n_offset+threadIdx.y)*c + blockIdx.x;
+			if(n_offset+threadIdx.y < n){
+				if(res){
+					y[idx1] = Dtype(sqrt(res));
+				}else{
+					y[idx1] = Dtype(0);
+				}
+			}
+		  	n_offset += blockDim.y;
+		}
+}
+
+//Usage: dim3 block(1,n); dim3 thread(c,1); row_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+template  <typename Dtype>
+__global__ void row_group_lasso_kernel(const int n, const int c, const Dtype *x, Dtype* y){
+	int c_offset = 0;
+
+		//initialize y
+		while(c_offset<c){
+			//int idx1 = blockIdx.y * blockDim.x + c_offset + threadIdx.x;
+			int idx1 = blockIdx.y * c + c_offset + threadIdx.x;
+			if(c_offset + threadIdx.x < c){//WITHOUT THIS: THE C MUST BE MULTIPLE TIMES OF BLOCKDIM.X IN CURRENT IMPLEMENTATION !!!
+				y[idx1] = x[idx1]*x[idx1];
+			}
+			c_offset += blockDim.x;
+		}
+		__syncthreads();
+
+		//sum along rows
+		c_offset=0;
+		Dtype res = 0;
+		while(c_offset<c){
+			int len = (c_offset + blockDim.x)<c ? blockDim.x : (c-c_offset);//valid threads to process
+			while(len/2>0){
+				if(threadIdx.x<len/2){
+					//int idx1 = blockIdx.y * blockDim.x + c_offset + threadIdx.x;
+					//int idx2 = blockIdx.y * blockDim.x + c_offset + threadIdx.x + (len+1)/2;
+					int idx1 = blockIdx.y * c + c_offset + threadIdx.x;
+					int idx2 = blockIdx.y * c + c_offset + threadIdx.x + (len+1)/2;
+					y[idx1] += y[idx2];
+				}
+				__syncthreads();
+				len=(len+1)/2;
+			}
+
+			//res += y[blockIdx.y * blockDim.x + c_offset];
+			res += y[blockIdx.y * c + c_offset];
+			c_offset += blockDim.x;
+		}
+		__syncthreads();
+
+		//copy
+		c_offset=0;
+		while(c_offset<c){
+			//int idx1 = blockIdx.y * blockDim.x + c_offset + threadIdx.x;
+			int idx1 = blockIdx.y * c + c_offset + threadIdx.x;
+			if(c_offset + threadIdx.x < c){
+				if(res){
+					y[idx1] = Dtype(sqrt(res));
+				}else{
+					y[idx1] = Dtype(0);
+				}
+			}
+		  	c_offset += blockDim.x;
+		}
+}
+#define XOFFSET(idx) ((idx)%blk_size_c)
+#define YOFFSET(idx) ((idx)/blk_size_c)
+//Usage: dim3 block(a,b); dim3 thread(get_threads_per_block,1); col_group_lasso_kernel<<<block,thread,sharemembytesize>>>(n,c,x,y);
+//one-D thread block processes two-D data block
+template  <typename Dtype>
+__global__ void block_group_lasso_kernel(const int n, const int c,
+										const Dtype *x, Dtype* y){
+	int c_offset = 0;
+	const int blk_size_n = n%gridDim.y ? n/gridDim.y+1 : n/gridDim.y;
+	const int blk_size_c = c%gridDim.x ? c/gridDim.x+1 : c/gridDim.x;
+	//extern __shared__ Dtype shared_mem[];
+	//initialize 1D shared memory
+	while(c_offset<blk_size_n*blk_size_c){
+		int offset_x = XOFFSET(c_offset + threadIdx.x);
+		int offset_y = YOFFSET(c_offset + threadIdx.x);
+		int x_pos = blockIdx.x * blk_size_c + XOFFSET(c_offset + threadIdx.x);
+		int y_pos = blockIdx.y * blk_size_n + YOFFSET(c_offset + threadIdx.x);
+		int idx1 = y_pos * c + x_pos;
+		//if(x_pos < c && y_pos < n){//WITHOUT THIS: THE C MUST BE MULTIPLE TIMES OF BLOCKDIM.X IN CURRENT IMPLEMENTATION !!!
+		if(offset_x < blk_size_c && offset_y < blk_size_n){//WITHOUT THIS: THE C MUST BE MULTIPLE TIMES OF BLOCKDIM.X IN CURRENT IMPLEMENTATION !!!
+			y[idx1] = x[idx1]*x[idx1];
+			//shared_mem[c_offset + threadIdx.x] = x[idx1]*x[idx1];
+		}//else{
+			//shared_mem[c_offset + threadIdx.x] = 0;
+		//}
+		c_offset += blockDim.x;
+	}
+	__syncthreads();
+
+	//sum along block
+	c_offset=0;
+	Dtype res = 0;
+	while(c_offset<blk_size_n*blk_size_c){
+		int len = (c_offset + blockDim.x)<blk_size_n*blk_size_c ? blockDim.x : (blk_size_n*blk_size_c-c_offset);//valid threads to process
+		while(len/2>0){
+			if(threadIdx.x<len/2){
+
+				int x_pos = blockIdx.x * blk_size_c + XOFFSET(c_offset + threadIdx.x);
+				int y_pos = blockIdx.y * blk_size_n + YOFFSET(c_offset + threadIdx.x);
+				int idx1 = y_pos * c + x_pos;
+				//Dtype sum_elem1 = (x_pos < c && y_pos < n) ? y[idx1] : 0;
+				x_pos = blockIdx.x * blk_size_c + XOFFSET(c_offset + threadIdx.x + (len+1)/2);
+				y_pos = blockIdx.y * blk_size_n + YOFFSET(c_offset + threadIdx.x + (len+1)/2);
+				int idx2 = y_pos * c + x_pos;
+				//Dtype sum_elem2 = (x_pos < c && y_pos < n) ? y[idx2] : 0;
+				//BUG: we must ALWAYS store this data. Use shared memory with size of blk_size_n*blk_size_c!!!
+				y[idx1] += y[idx2];
+				//shared_mem[c_offset+threadIdx.x] = sum_elem1+sum_elem2;
+
+				//int idx1 = c_offset + threadIdx.x;
+				//int idx2 = c_offset + threadIdx.x + (len+1)/2;
+				//shared_mem[idx1] += shared_mem[idx2];
+			}
+			__syncthreads();
+			len=(len+1)/2;
+		}
+
+		//res += y[blockIdx.y * c + c_offset];
+		int x_pos = blockIdx.x * blk_size_c + XOFFSET(c_offset);
+		int y_pos = blockIdx.y * blk_size_n + YOFFSET(c_offset);
+		int idx1 = y_pos * c + x_pos;
+		res += y[idx1];
+		//res += shared_mem[c_offset];
+		c_offset += blockDim.x;
+	}
+	__syncthreads();
+
+	//copy
+	c_offset=0;
+	while(c_offset<blk_size_n*blk_size_c){
+		int offset_x = XOFFSET(c_offset + threadIdx.x);
+		int offset_y = YOFFSET(c_offset + threadIdx.x);
+		int x_pos = blockIdx.x * blk_size_c + XOFFSET(c_offset + threadIdx.x);
+		int y_pos = blockIdx.y * blk_size_n + YOFFSET(c_offset + threadIdx.x);
+		int idx1 = y_pos * c + x_pos;
+		//if(x_pos < c && y_pos < n){
+		if(offset_x < blk_size_c && offset_y < blk_size_n){
+			if(res){
+				y[idx1] = Dtype(sqrt(res));
+			}else{
+				y[idx1] = Dtype(0);
+			}
+		}
+	  	c_offset += blockDim.x;
+	}
+}
+
 template <>
-void caffe_gpu_scale<long>(const int n, const long alpha, const long *x,
-                             long* y);
+void caffe_gpu_bar_group_lasso<int>(const int n, const int c, const int* x, int* y, bool along_column_or_row){
+	NOT_IMPLEMENTED;
+}
+
+template <>
+void caffe_gpu_bar_group_lasso<unsigned int>(const int n, const int c, const unsigned int* x, unsigned int* y, bool along_column_or_row){
+	NOT_IMPLEMENTED;
+}
+
+template <>
+void caffe_gpu_bar_group_lasso<long>(const int n, const int c, const long* x, long* y, bool along_column_or_row){
+	NOT_IMPLEMENTED;
+}
+template <>
+void caffe_gpu_bar_group_lasso<float>(const int n, const int c, const float* x, float* y, bool along_column_or_row){
+	int threads_per_block = Caffe::get_threads_per_block();
+	//LOG(INFO)<<"threads_per_block "<<threads_per_block;
+	if(along_column_or_row){
+		dim3 block(c,1);
+		dim3 thread(1,n>threads_per_block ? threads_per_block:n );//CAFFE_CUDA_NUM_THREADS
+		col_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+	}else{
+		dim3 block(1,n);
+		dim3 thread(c>threads_per_block ? threads_per_block:c, 1);//CAFFE_CUDA_NUM_THREADS
+		row_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+	}
+	CUDA_POST_KERNEL_CHECK;
+}
+
+template <>
+void caffe_gpu_bar_group_lasso<double>(const int n, const int c, const double* x, double* y, bool along_column_or_row){
+	int threads_per_block = Caffe::get_threads_per_block();
+	//LOG(INFO)<<"threads_per_block "<<threads_per_block;
+	if(along_column_or_row){
+		dim3 block(c,1);
+		dim3 thread(1,n>threads_per_block ? threads_per_block:n );//CAFFE_CUDA_NUM_THREADS
+		col_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+	}else{
+		dim3 block(1,n);
+		dim3 thread(c>threads_per_block ? threads_per_block:c, 1);//CAFFE_CUDA_NUM_THREADS
+		row_group_lasso_kernel<<<block,thread>>>(n,c,x,y);
+	}
+	CUDA_POST_KERNEL_CHECK;
+}
+
+template <>
+void caffe_gpu_block_group_lasso<float>(const int n, const int c,
+		const int blk_size_n, const int blk_size_c,
+		const float *x, float* y){
+	CHECK_LE(blk_size_n,n);
+	CHECK_LE(blk_size_c,c);
+	CHECK_EQ(n%blk_size_n,0);
+	CHECK_EQ(c%blk_size_c,0);
+	int threads_per_block = Caffe::get_threads_per_block();
+	//int shared_mem_bytes_per_block = Caffe::get_shared_mem_bytes_per_block();
+	const int blk_num_n = (n+blk_size_n-1)/blk_size_n;
+	const int blk_num_c = (c+blk_size_c-1)/blk_size_c;
+	const int blk_size = blk_size_n*blk_size_c;
+	//const int sharedmem_bytes = blk_size*sizeof(float)*2;
+	//CHECK_GE(shared_mem_bytes_per_block,sharedmem_bytes);
+	dim3 block(blk_num_c,blk_num_n);
+	dim3 thread(blk_size>threads_per_block?threads_per_block:blk_size, 1);
+	//LOG(INFO)<< "blk_size_n:" << blk_size_n
+	//		<< " blk_size_c:" << blk_size_c
+	//		<< " blk_num_n:" << blk_num_n
+	//		<< " blk_num_c:" << blk_num_c;
+	//block_group_lasso_kernel<<<block,thread,sharedmem_bytes>>>(n, c,x,y);
+	block_group_lasso_kernel<<<block,thread>>>(n, c,x,y);
+	CUDA_POST_KERNEL_CHECK;
+}
+
+template <>
+void caffe_gpu_block_group_lasso<double>(const int n, const int c,
+		const int blk_size_n, const int blk_size_c,
+		const double *x, double* y){
+	NOT_IMPLEMENTED;
+}
+template <>
+void caffe_gpu_block_group_lasso<int>(const int n, const int c,
+		const int blk_size_n, const int blk_size_c,
+		const int *x, int* y){
+	NOT_IMPLEMENTED;
+}
+template <>
+void caffe_gpu_block_group_lasso<unsigned int>(const int n, const int c,
+		const int blk_size_n, const int blk_size_c,
+		const unsigned int *x, unsigned int* y){
+	NOT_IMPLEMENTED;
+}
+template <>
+void caffe_gpu_block_group_lasso<long>(const int n, const int c,
+		const int blk_size_n, const int blk_size_c,
+		const long *x, long* y){
+	NOT_IMPLEMENTED;
+}
+
 
 template <typename Dtype>
 __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {
@@ -298,6 +890,21 @@ __global__ void div_kernel(const int n, const Dtype* a,
   }
 }
 
+template <typename Dtype>
+__global__ void div_checkzero_kernel(const int n, const Dtype* a,
+    const Dtype* b, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = b[index] ? (a[index] / b[index]) : Dtype(0);
+  }
+}
+
+template <typename Dtype>
+__global__ void inv_kernel(const int n, const Dtype* a, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = 1 / a[index];
+  }
+}
+
 template <>
 void caffe_gpu_div<float>(const int N, const float* a,
     const float* b, float* y) {
@@ -312,6 +919,36 @@ void caffe_gpu_div<double>(const int N, const double* a,
   // NOLINT_NEXT_LINE(whitespace/operators)
   div_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
       N, a, b, y);
+}
+
+template <>
+void caffe_gpu_div_checkzero<float>(const int N, const float* a,
+    const float* b, float* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  div_checkzero_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, b, y);
+}
+
+template <>
+void caffe_gpu_div_checkzero<double>(const int N, const double* a,
+    const double* b, double* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+	div_checkzero_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, b, y);
+}
+
+template <>
+void caffe_gpu_inv<float>(const int N, const float* a, float* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  inv_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y);
+}
+
+template <>
+void caffe_gpu_inv<double>(const int N, const double* a, double* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  inv_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y);
 }
 
 template <typename Dtype>
@@ -402,31 +1039,10 @@ void caffe_gpu_powx<double>(const int N, const double* a,
       N, a, alpha, y);
 }
 
-template <typename Dtype>
-__global__ void sqrt_kernel(const int n, const Dtype* a, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = sqrt(a[index]);
-  }
-}
-
-template <>
-void caffe_gpu_sqrt<float>(const int N, const float* a, float* y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sqrt_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
-      N, a, y);
-}
-
-template <>
-void caffe_gpu_sqrt<double>(const int N, const double* a, double* y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sqrt_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
-      N, a, y);
-}
-
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
                                       - (x[index] < Dtype(0)));
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
-
+DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(eltwise_multi, y[index] = y[index]*x[index] )
 void caffe_gpu_rng_uniform(const int n, unsigned int* r) {
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
 }
@@ -470,5 +1086,124 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
   CURAND_CHECK(
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
+
+template <typename Dtype>
+__global__ void scan_kernel(Dtype *g_odata, const Dtype *g_idata, int n)
+{
+  __shared__ Dtype temp[2*64]; // allocated on invocation
+  int thid = threadIdx.x;
+  int pout = 0, pin = 1;
+  // Load input into shared memory.
+  // This is exclusive scan, so shift right by one
+  // and set first element to 0
+  temp[pout*n + thid] = (thid > 0) ? g_idata[thid-1] : 0;
+  __syncthreads();
+  for (int offset = 1; offset < n; offset *= 2)
+  {
+   pout = 1 - pout; // swap double buffer indices
+   pin = 1 - pout;
+   if (thid >= offset)
+     temp[pout*n+thid] = temp[pin*n+thid] + temp[pin*n+thid - offset];
+   else
+     temp[pout*n+thid] = temp[pin*n+thid];
+   __syncthreads();
+  }
+  g_odata[thid] = temp[pout*n+thid]; // write output
+}
+
+// input matrix row major, output matrix col major when new_m >= n
+template <typename Dtype>
+__global__ void impose_sparsity_copyin_kernel(
+  const Dtype *weight, double *weight_temp, const double *A, double *A_temp, const Dtype *mask, int m, int n, double impose_factor, int repeat)
+{
+  int tid = threadIdx.x + blockDim.x*blockIdx.x;
+
+  while (tid < repeat*(m + n)) {
+    int i = tid/(m + n);
+    int j = tid%(m + n);
+
+    if (j < m) {
+      if (mask[i*m + j] == 0) {
+        for (int k = 0; k < n; ++k) {
+          A_temp[(i*n + k)*(m + n) + j] = impose_factor*A[j*n + k];
+        }
+      }
+      else {
+        for (int k = 0; k < n; ++k) {
+          A_temp[(i*n + k)*(m + n) + j] = 0;
+        }
+      }
+
+      //weight_temp[i*(m + n) + j] = 0; /////
+    }
+    else {
+      /*for (int k = 0; k < n; ++k) {
+        A_temp[(i*n + k)*(m + n) + j] = 0;
+      }
+      A_temp[(i*n + j - m)*(m + n) + j] = 1;*/
+
+      weight_temp[i*(m + n) + j] = weight[i*n + j - m];
+    }
+
+    tid += gridDim.x*blockDim.x;
+  }
+}
+
+template <typename Dtype>
+__global__ void impose_sparsity_copyout_kernel(
+  Dtype *weight, const double *weight_temp, int m, int n, int repeat)
+{
+  int tid = threadIdx.x + blockDim.x*blockIdx.x;
+
+  while (tid < repeat*n) {
+    int i = tid/n;
+    int j = tid%n;
+
+    weight[i*n + j] = weight_temp[i*(m + n) + j];
+
+    tid += gridDim.x*blockDim.x;
+  }
+}
+
+template <typename Dtype>
+void caffe_gpu_impose_sparsity(
+  Dtype *weight, double *weight_temp, double **weight_temp_ptr,
+  const double *A, double *A_temp, double **A_temp_ptr,
+  Dtype *mask, double impose_factor,
+  int M, int N, int repeat)
+{
+  impose_sparsity_copyin_kernel<<<CAFFE_GET_BLOCKS(repeat*(M*M + N*N)), CAFFE_CUDA_NUM_THREADS>>>(
+    weight, weight_temp, A, A_temp, mask, M*M, N*N, impose_factor, repeat);
+  
+	int info;
+	CUBLAS_CHECK(cublasDgelsBatched(
+		Caffe::cublas_handle(), CUBLAS_OP_N,
+		M*M + N*N, N*N,
+		1,
+		A_temp_ptr, M*M + N*N,
+		weight_temp_ptr, M*M + N*N,
+		&info,
+		NULL,
+		repeat));
+		
+  if (0 != info) {
+  	LOG(FATAL) << info << "th parameter is invalid";
+  }
+
+  impose_sparsity_copyout_kernel<<<CAFFE_GET_BLOCKS(repeat*N*N), CAFFE_CUDA_NUM_THREADS>>>(
+    weight, weight_temp, M*M, N*N, repeat);
+}
+
+template
+void caffe_gpu_impose_sparsity<double>(
+  double *weight, double *weight_temp, double **weight_temp_ptr,
+  const double *A, double *A_temp, double **A_temp_ptr,
+  double *mask, double impose_factor, int M, int N, int repeat);
+
+template
+void caffe_gpu_impose_sparsity<float>(
+  float *weight, double *weight_temp, double **weight_temp_ptr,
+  const double *A, double *A_temp, double **A_temp_ptr,
+  float *mask, double impose_factor, int M, int N, int repeat);
 
 }  // namespace caffe
