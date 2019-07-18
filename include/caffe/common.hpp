@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-#include </opt/cuda/include/cusparse.h>
+#include </opt/cuda/include/cusparse_v2.h>
 #include </opt/intel/mkl/include/mkl_lapacke.h>
 
 
@@ -21,6 +21,9 @@
 
 #include "caffe/util/device_alternate.hpp"
 
+
+
+#define CUSPARSE_CHECK(x) {cusparseStatus_t _c=x; if (_c != CUSPARSE_STATUS_SUCCESS) {printf("cusparse fail: %d, line: %d\n", (int)_c, __LINE__); exit(-1);}}
 // Convert macro to string
 #define STRINGIFY(m) #m
 #define AS_STRING(m) STRINGIFY(m)
