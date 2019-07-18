@@ -119,6 +119,11 @@ namespace caffe {
         const Dtype *weight = this->blobs_[0]->gpu_data();
         Dtype *weight_diff = this->blobs_[0]->mutable_gpu_diff();
         for (int i = 0; i < top.size(); ++i) {
+
+            //WinogradGradientTransform(
+            //const float *input, const float *weights, float *output, 
+            //int B,int H,int W,int pad_h,int pad_w, int C, int K);
+
             const Dtype *top_diff = top[i]->gpu_diff();
             const Dtype *bottom_data = bottom[i]->gpu_data();
             Dtype *bottom_diff = bottom[i]->mutable_gpu_diff();

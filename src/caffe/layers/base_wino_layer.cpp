@@ -420,7 +420,8 @@ namespace caffe {
             {
                 for (int tile_ind_y = 0; tile_ind_y < tile_num_h ; tile_ind_y++) {
                     for (int in_channel = 0; in_channel < in_channels; in_channel++) {
-                        for (int i = 0; i < kernel_w; i++) {
+                        for (int i = 0; i < kernel_w; i++) 
+                        {
                             for (int j = 0; j < kernel_h; j++)
                             {
                                 weight[i][j] = *(weights + out_channel * in_channels * kernel_size + in_channel * 3*3 + j * 3 + i);
@@ -429,12 +430,15 @@ namespace caffe {
 
                         tile_x = tile_ind_x * 4;
                         tile_y = tile_ind_y * 4;
-                        //insert input tile data  for (int j = 0; j < 6; j++)
+                        //insert input tile data
+                        for (int i = 0; i < 6; i++) 
+                        {
+                            for (int j = 0; j < 6; j++)
                             {
                                 in[i][j] = *(padded_input + in_channel * padded_in_h*padded_in_w + (tile_y+j)*padded_in_w  + tile_x + i);
                             }
                         }
-                        for (int i = 0; i < 6; i++) {
+                        
                         this->winograd_4_4_3_3(weight, in, out_tile);
                         this->flatten(out_tile,padded_out,tile_ind_x,tile_ind_y,out_channel,padded_out_w,padded_out_h);
                     }
