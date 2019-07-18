@@ -61,10 +61,10 @@ class WinogradLayer : public BaseConvolutionLayer<Dtype> {
    *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
    *    kernels + stream parallelism) engines.
    */
-  explicit WinogradLayer(const LayerParameter& param)
+  explicit Winograd9Layer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
 
-  virtual inline const char* type() const { return "Winograd"; }
+  virtual inline const char* type() const { return "Winograd9"; }
 
   virtual void WeightAlign();
   bool IsReshapedToWinograd();
