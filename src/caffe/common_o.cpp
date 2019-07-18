@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-
+  
 #include <omp.h>
 
 #include "caffe/common.hpp"
@@ -12,18 +12,13 @@
 namespace caffe {
 
 // Make sure each thread can have different values.
-//static boost::thread_specific_ptr<Caffe> thread_instance_;
-Caffe *thread_instance_ = NULL;
+static boost::thread_specific_ptr<Caffe> thread_instance_;
 
 Caffe& Caffe::Get() {
-  if (!thread_instance_) {
-    thread_instance_ = new Caffe();
+  if (!thread_instance_.get()) {
+    thread_instance_.reset(new Caffe());
   }
-  return *thread_instance_;
-//  if (!thread_instance_.get()) {
-//    thread_instance_.reset(new Caffe());
-//  }
-//  return *(thread_instance_.get());
+  return *(thread_instance_.get());
 }
 
 // random seeding
@@ -60,7 +55,7 @@ void GlobalInit(int* pargc, char*** pargv) {
 
 Caffe::Caffe()
     : random_generator_(), mode_(Caffe::CPU),
-      solver_count_(1), root_solver_(true), iter_size_(1) { }
+      solver_count_(1), solver_rank_(0), multiprocess_(false) { }
 
 Caffe::~Caffe() { }
 
@@ -112,21 +107,13 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), cusparse_handle_(NULL), cusparse_matdescr_(NULL), curand_generator_(NULL), random_generator_(),
-    mode_(Caffe::CPU), solver_count_(1), root_solver_(true), iter_size_(1) {
+    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
+    mode_(Caffe::CPU),
+    solver_count_(1), solver_rank_(0), multiprocess_(false) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
-  }
-  if (cusparseCreate(&cusparse_handle_) != CUSPARSE_STATUS_SUCCESS) {
-        LOG(ERROR) << "Cannot create Cusparse handle. Cusparse won't be available.";
-  }
-  if (cusparseCreateMatDescr(&cusparse_matdescr_) != CUSPARSE_STATUS_SUCCESS) {
-      LOG(ERROR) << "Cannot create Cusparse matrix descriptor.";
-  }else{
-	  cusparseSetMatType(cusparse_matdescr_,CUSPARSE_MATRIX_TYPE_GENERAL);
-	  cusparseSetMatIndexBase(cusparse_matdescr_,CUSPARSE_INDEX_BASE_ZERO);
   }
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
@@ -138,19 +125,10 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
-#ifdef _OPENMP
-  if (0 == omp_get_thread_num()) { 
-#endif
   if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
-  if (cusparse_handle_) CUSPARSE_CHECK(cusparseDestroy(cusparse_handle_));
-  if (cusparse_matdescr_) CUSPARSE_CHECK(cusparseDestroyMatDescr(cusparse_matdescr_));
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
-#ifdef _OPENMP
-  }
-#endif
-
 }
 
 void Caffe::set_random_seed(const unsigned int seed) {
@@ -180,18 +158,11 @@ void Caffe::SetDevice(const int device_id) {
   // The call to cudaSetDevice must come before any calls to Get, which
   // may perform initialization using the GPU.
   CUDA_CHECK(cudaSetDevice(device_id));
-  //CUDA_CHECK(cudaGetDeviceProperties(&(Get().master_device_properties_), device_id));
   if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
-  if (Get().cusparse_handle_) CUSPARSE_CHECK(cusparseDestroy(Get().cusparse_handle_));
-  if (Get().cusparse_matdescr_) CUSPARSE_CHECK(cusparseDestroyMatDescr(Get().cusparse_matdescr_));
-
   if (Get().curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
   }
   CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
-  CUSPARSE_CHECK(cusparseCreate(&Get().cusparse_handle_));
-  CUSPARSE_CHECK(cusparseCreateMatDescr(&Get().cusparse_matdescr_));
-  Get().cusparse_initialize_matsescr();
   CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
@@ -317,32 +288,6 @@ const char* cublasGetErrorString(cublasStatus_t error) {
 #endif
   }
   return "Unknown cublas status";
-}
-
-const char* cusparseGetErrorString(cusparseStatus_t error) {
-  switch (error) {
-  case CUSPARSE_STATUS_SUCCESS:
-    return "CUSPARSE_STATUS_SUCCESS";
-  case CUSPARSE_STATUS_NOT_INITIALIZED:
-    return "CUSPARSE_STATUS_NOT_INITIALIZED";
-  case CUSPARSE_STATUS_ALLOC_FAILED:
-    return "CUSPARSE_STATUS_ALLOC_FAILED";
-  case CUSPARSE_STATUS_INVALID_VALUE:
-    return "CUSPARSE_STATUS_INVALID_VALUE";
-  case CUSPARSE_STATUS_ARCH_MISMATCH:
-    return "CUSPARSE_STATUS_ARCH_MISMATCH";
-  case CUSPARSE_STATUS_MAPPING_ERROR:
-    return "CUSPARSE_STATUS_MAPPING_ERROR";
-  case CUSPARSE_STATUS_EXECUTION_FAILED:
-    return "CUSPARSE_STATUS_EXECUTION_FAILED";
-  case CUSPARSE_STATUS_INTERNAL_ERROR:
-    return "CUSPARSE_STATUS_INTERNAL_ERROR";
-  case CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED:
-      return "CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED";
-  case CUSPARSE_STATUS_ZERO_PIVOT:
-        return "CUSPARSE_STATUS_ZERO_PIVOT";
-  }
-  return "Unknown cusparse status";
 }
 
 const char* curandGetErrorString(curandStatus_t error) {

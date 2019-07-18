@@ -134,39 +134,8 @@ class Caffe {
   }
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
-  inline static cusparseHandle_t cusparse_handle() { return Get().cusparse_handle_; }
-  inline static cusparseMatDescr_t cusparse_matdescr() { return Get().cusparse_matdescr_; }
   inline static curandGenerator_t curand_generator() {
     return Get().curand_generator_;
-  }
-  inline static void cusparse_initialize_matsescr(){
-	  if(Get().cusparse_matdescr_){
-		  cusparseSetMatType(Get().cusparse_matdescr_,CUSPARSE_MATRIX_TYPE_GENERAL);
-	  	  cusparseSetMatIndexBase(Get().cusparse_matdescr_,CUSPARSE_INDEX_BASE_ZERO);
-	  }
-  }
-  //inline static cudaDeviceProp master_device_properties() { return Get().master_device_properties_; }
-  inline static int get_threads_per_block() {
-	  cudaDeviceProp prop;
-	  int device;
-	  if (cudaSuccess != cudaGetDevice(&device)) {
-		LOG(FATAL)<<"No cuda device present.";
-	    return CAFFE_CUDA_NUM_THREADS;
-	  }
-	  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
-	  return prop.maxThreadsPerBlock;
-  }
-
-  //inline static cudaDeviceProp master_device_properties() { return Get().master_device_properties_; }
-  inline static int get_shared_mem_bytes_per_block() {
-	  cudaDeviceProp prop;
-	  int device;
-	  if (cudaSuccess != cudaGetDevice(&device)) {
-	    LOG(FATAL)<<"No cuda device present.";
-	    return 0;
-	  }
-	  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
-	  return prop.sharedMemPerBlock;
   }
 #endif
 
@@ -190,33 +159,28 @@ class Caffe {
   // Search from start_id to the highest possible device ordinal,
   // return the ordinal of the first available device.
   static int FindDevice(const int start_id = 0);
-  // Parallel training info
+  // Parallel training
   inline static int solver_count() { return Get().solver_count_; }
   inline static void set_solver_count(int val) { Get().solver_count_ = val; }
-  inline static bool root_solver() { return Get().root_solver_; }
-  inline static void set_root_solver(bool val) { Get().root_solver_ = val; }
-
-  // begin intel caffe
-  inline static int iter_size() { return Get().iter_size_; }
-  inline static void set_iter_size(int val) { Get().iter_size_ = val; }
-  // end intel caffe
+  inline static int solver_rank() { return Get().solver_rank_; }
+  inline static void set_solver_rank(int val) { Get().solver_rank_ = val; }
+  inline static bool multiprocess() { return Get().multiprocess_; }
+  inline static void set_multiprocess(bool val) { Get().multiprocess_ = val; }
+  inline static bool root_solver() { return Get().solver_rank_ == 0; }
 
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
-  cusparseHandle_t cusparse_handle_;
-  cusparseMatDescr_t cusparse_matdescr_;
   curandGenerator_t curand_generator_;
-  //cudaDeviceProp master_device_properties_;
 #endif
   shared_ptr<RNG> random_generator_;
 
   Brew mode_;
+
+  // Parallel training
   int solver_count_;
-  bool root_solver_;
-  // begin intel caffe
-  int iter_size_;
-  // end intel caffe
+  int solver_rank_;
+  bool multiprocess_;
 
  private:
   // The private constructor to avoid duplicate instantiation.
