@@ -12,7 +12,7 @@
 #include <vector>
 #include <immintrin.h>
 #include "SpMP/synk/barrier.hpp"
-#include "intrinsic.hpp"
+// #include "intrinsic.hpp"
 
 
 #ifndef PRECISION
