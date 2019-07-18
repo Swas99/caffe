@@ -16,12 +16,15 @@ ifeq ($(DEBUG_BUILD_DIR),)
 endif
 
 DEBUG ?= 0
+AVX = 2 # for libxsmm, default AVX2
 ifeq ($(DEBUG), 1)
 	BUILD_DIR := $(DEBUG_BUILD_DIR)
 	OTHER_BUILD_DIR := $(RELEASE_BUILD_DIR)
+	OPT=0 # for libxsmm
 else
 	BUILD_DIR := $(RELEASE_BUILD_DIR)
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
+	OPT=3 # for libxsmm
 endif
 
 # All of the directories containing code.
@@ -178,7 +181,8 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
+# LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 spmp xsmm
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -323,6 +327,8 @@ ifneq (,$(findstring clang++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,-force_load $(STATIC_NAME)
 else ifneq (,$(findstring g++,$(CXX)))
 	STATIC_LINK_COMMAND := -Wl,--whole-archive $(STATIC_NAME) -Wl,--no-whole-archive
+else ifneq (,$(findstring icpc	,$(CXX)))
+	STATIC_LINK_COMMAND := -static
 else
   # The following line must not be indented with a tab, since we are not inside a target
   $(error Cannot static link with the $(CXX) compiler)
@@ -335,6 +341,23 @@ ifeq ($(DEBUG), 1)
 else
 	COMMON_FLAGS += -DNDEBUG -O2
 endif
+
+
+ifeq ($(AVX), 3)
+  ifeq ($(MIC), 1)
+    CXXFLAGS += -xMIC-AVX512
+  else
+    CXXFLAGS += -xCORE-AVX512
+  endif
+else
+  ifeq ($(AVX), 2)
+    CXXFLAGS += -xCORE-AVX2
+  else
+    CXXFLAGS += -xHost
+  endif
+endif
+
+COMMON_FLAGS += -DMKL2017_SUPPORTED
 
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
@@ -376,6 +399,11 @@ ifeq ($(CPU_ONLY), 1)
 	COMMON_FLAGS += -DCPU_ONLY
 endif
 
+# Profiler
+ifeq ($(USE_NVTX), 1)
+       COMMON_FLAGS += -DUSE_NVTX
+endif
+
 # Python layer support
 ifeq ($(WITH_PYTHON_LAYER), 1)
 	COMMON_FLAGS += -DWITH_PYTHON_LAYER
@@ -389,7 +417,7 @@ ifeq ($(BLAS), mkl)
 	LIBRARIES += mkl_rt
 	COMMON_FLAGS += -DUSE_MKL
 	MKLROOT ?= /opt/intel/mkl
-	BLAS_INCLUDE ?= $(MKLROOT)/include
+	BLAS_INCLUDE ?= $(MKLROOT)/include $(MKLROOT)/include/fftw
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 else ifeq ($(BLAS), open)
 	# OpenBLAS
@@ -426,6 +454,10 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
+
+#openmp
+CXXFLAGS += -qopenmp
+LINKFLAGS += -qopenmp
 
 # Complete build flags.
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
@@ -475,6 +507,11 @@ endif
 	superclean supercleanlist supercleanfiles warn everything
 
 all: lib tools examples
+
+libxsmm:
+       $(MAKE) -C src/libxsmm AVX=$(AVX) OPT=$(OPT) DBG=$(DBG) FC=
+SpMP:
+       $(MAKE) -C src/SpMP DBG=$(DBG)
 
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
@@ -590,12 +627,12 @@ $(BUILD_DIR)/.linked:
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
-$(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(OBJS) libxsmm SpMP | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(LDFLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 
-$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
+$(STATIC_NAME): $(OBJS) libxsmm SpMP | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
@@ -675,6 +712,8 @@ clean:
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)
+	$(MAKE) -C src/libxsmm clean
+	$(MAKE) -C src/SpMP clean
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
