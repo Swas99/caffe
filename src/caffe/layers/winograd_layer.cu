@@ -156,6 +156,15 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
     int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
     int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
 
+    winograd_input_im2col_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
+                                              CAFFE_CUDA_NUM_THREADS>>>(
+      num_kernels, bottom_data, temp2_.mutable_gpu_data(),
+      height, width,
+      pad_h, pad_w,
+      ntiles_h_, ntiles_w_,
+      tile_h_in_, tile_w_in_,
+      tile_h_out_, tile_w_out_,
+      this->conv_in_channels_, this->num_);
   }
 }
 
