@@ -193,7 +193,7 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       }
 
 
-      printf("count: %d\n",in_activation_ptrs_->count());
+      printf("count: %d\n",out_activation_ptrs_->count());
       CUBLAS_CHECK(cublasSgemmBatched(
         Caffe::cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N,
         N, M, K,
