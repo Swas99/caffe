@@ -12,7 +12,7 @@ extern std::map<std::string, unsigned long long> total_conv_cycles;
 extern std::map<std::string, double> total_conv_flops;
 extern int total_files;
 
-double get_cpu_freq();
+// double get_cpu_freq();
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
@@ -345,16 +345,16 @@ int test() {
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
 
-  if (!total_conv_cycles.empty()) {
-    total_files /= total_conv_cycles.size(); // compensate for duplicated counts at each conv layer
-    LOG(INFO) << "Total-images-processed: " << total_files;
-    std::map<std::string, unsigned long long>::const_iterator itr;
-    for (itr = total_conv_cycles.begin(); itr != total_conv_cycles.end(); ++itr) {
-      LOG(INFO) << itr->first << " K-cycles-per-file " << itr->second/total_files/1e3 <<
-          " mFlops-per-file " << total_conv_flops[itr->first]/total_files/1e6 <<
-          " GF/s " << total_conv_flops[itr->first]/(itr->second/get_cpu_freq())/1e9;
-    }
-  }
+  // if (!total_conv_cycles.empty()) {
+  //   // total_files /= total_conv_cycles.size(); // compensate for duplicated counts at each conv layer
+  //   // LOG(INFO) << "Total-images-processed: " << total_files;
+  //   // std::map<std::string, unsigned long long>::const_iterator itr;
+  //   for (itr = total_conv_cycles.begin(); itr != total_conv_cycles.end(); ++itr) {
+  //     // LOG(INFO) << itr->first << " K-cycles-per-file " << itr->second/total_files/1e3 <<
+  //     //     " mFlops-per-file " << total_conv_flops[itr->first]/total_files/1e6 <<
+  //     //     " GF/s " << total_conv_flops[itr->first]/(itr->second/get_cpu_freq())/1e9;
+  //   }
+  // }
 //  LOG(INFO) << "Time-taken-per-image: " << (double)total_conv_cycles/total_files/1e3;
 
   return 0;
@@ -467,7 +467,7 @@ RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
 
-  printf("freq = %g\n", get_cpu_freq());
+  // printf("freq = %g\n", get_cpu_freq());
 
    //CUDA_CHECK(cudaProfilerInitialize());
   // Print output to stderr (while still logging).
