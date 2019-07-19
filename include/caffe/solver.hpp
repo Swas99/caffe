@@ -81,7 +81,6 @@ class Solver {
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
-    template <typename Dtype>
     friend class Solver;
   };
   const vector<Callback*>& callbacks() const { return callbacks_; }
