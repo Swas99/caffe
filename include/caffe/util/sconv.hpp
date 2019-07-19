@@ -11,7 +11,7 @@
 
 #include <vector>
 #include <immintrin.h>
-#include "SpMP/synk/barrier.hpp"
+// #include "SpMP/synk/barrier.hpp"
 #include "intrinsic.hpp"
 
 
