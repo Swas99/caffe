@@ -1,4 +1,5 @@
 #include <vector>
+#include <stdio.h>
 
 #include "caffe/layers/winograd_layer.hpp"
 #include "caffe/util/winograd.hpp"
@@ -191,6 +192,17 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
         weight_ptrs_initialized_ = true;
       }
 
+
+      printf("count: %d\n",in_activation_ptrs_->count());
+      CUBLAS_CHECK(cublasSgemmBatched(
+        Caffe::cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N,
+        N, M, K,
+        &alpha,
+        (const float **)in_activation_ptrs_->gpu_data(), N,
+        (const float **)weight_ptrs_->gpu_data(), K,
+        &beta,
+        (float **)out_activation_ptrs_->mutable_gpu_data(), N,
+        in_activation_ptrs_->count()));
     }
       // col_buff has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w)
 
