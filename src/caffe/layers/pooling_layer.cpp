@@ -145,6 +145,7 @@ void PoolingLayer<float>::Forward_cpu(const vector<Blob<float>*>& bottom,
   // loop to save time, although this results in more code.
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
+    {
     int* mask = NULL;  // suppress warnings about uninitalized variables
     if (!use_top_mask) mask = max_idx_.mutable_cpu_data();
     if (use_top_mask) {
@@ -270,6 +271,7 @@ void PoolingLayer<float>::Forward_cpu(const vector<Blob<float>*>& bottom,
       } // for each input layer
     }
     break;
+  }
   case PoolingParameter_PoolMethod_AVE:
 #pragma omp parallel for
     for (int i = 0; i < top_count; ++i) {
