@@ -150,7 +150,12 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
   for (int i = 0; i < bottom.size(); ++i) {
     const float* bottom_data = bottom[i]->gpu_data();
     float* top_data = top[i]->mutable_gpu_data();
-    //here
+    
+    int M = this->conv_in_channels_*ntiles_h_*ntiles_w_;
+    int num_kernels = this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_in_*tile_w_in_;
+    int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
+    int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
+
   }
 }
 
