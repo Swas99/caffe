@@ -306,10 +306,44 @@ void PoolingLayer<float>::Forward_cpu(const vector<Blob<float>*>& bottom,
     }
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
-    NOT_IMPLEMENTED;
+    // NOT_IMPLEMENTED;
     break;
   default:
-    LOG(FATAL) << "Unknown pooling method.";
+
+#pragma omp parallel for
+    for (int i = 0; i < top_count; ++i) {
+      top_data[i] = 0;
+    }
+    // The main loop
+#pragma omp parallel for collapse(2)
+    for (int n = 0; n < num; ++n) {
+      for (int c = 0; c < channels_; ++c) {
+        const float *bottom_data_cur = bottom_data + bottom[0]->offset(0, 1)*(channels_*n + c);
+        float *top_data_cur = top_data + top[0]->offset(0, 1)*(channels_*n + c);
+
+        for (int ph = 0; ph < pooled_height_; ++ph) {
+          for (int pw = 0; pw < pooled_width_; ++pw) {
+            int hstart = ph * stride_h_ - pad_h_;
+            int wstart = pw * stride_w_ - pad_w_;
+            int hend = min(hstart + kernel_h_, height_ + pad_h_);
+            int wend = min(wstart + kernel_w_, width_ + pad_w_);
+            int pool_size = (hend - hstart) * (wend - wstart);
+            hstart = max(hstart, 0);
+            wstart = max(wstart, 0);
+            hend = min(hend, height_);
+            wend = min(wend, width_);
+            for (int h = hstart; h < hend; ++h) {
+              for (int w = wstart; w < wend; ++w) {
+                top_data_cur[ph * pooled_width_ + pw] +=
+                    bottom_data_cur[h * width_ + w];
+              }
+            }
+            top_data_cur[ph * pooled_width_ + pw] /= pool_size;
+          }
+        }
+      }
+    }
+    break;
   }
 }
 
