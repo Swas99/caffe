@@ -193,9 +193,9 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       }
 
 
-      //printf("N: %d\n",N);
-      //printf("M: %d\n",M);
-      //printf("K: %d\n",K);
+      printf("N: %d\n",N);
+      printf("M: %d\n",M);
+      printf("K: %d\n",K);
       //printf("alpha: %d\n",alpha);
       //printf("beta: %d\n",beta);
       //printf("in_activation_ptrs_: %d\n",in_activation_ptrs_->count());
