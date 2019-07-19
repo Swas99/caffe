@@ -344,15 +344,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
         int N = this->conv_in_channels_/this->group_;
         int K = this->num_*ntiles_h_*ntiles_w_;
 
-        CUBLAS_CHECK(cublasSgemmBatched(
-          Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
-          N, M, K,
-          &alpha,
-          (const float **)in_activation_ptrs_->gpu_data(), K,
-          (const float **)out_activation_ptrs_->gpu_data(), K,
-          &beta,
-          (float **)weight_diff_ptrs_->mutable_gpu_data(), N,
-          tile_h_in_*tile_w_in_*this->group_));
+        //-->> HERE 1
           // weight_diff has (tile_h_in*tile_w_in) x (conv_out_channels) x (conv_in_channels/group) dimension
           
       } // param_propagate_down_[0]
@@ -365,7 +357,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
         int N = this->num_*ntiles_h_*ntiles_w_;
         int K = this->conv_out_channels_/this->group_;
 
-        //-->> HERE
+        //-->> HERE 2
 
         // Transform back to time domain
         caffe_gpu_gemm<float>(CblasTrans, CblasTrans,
