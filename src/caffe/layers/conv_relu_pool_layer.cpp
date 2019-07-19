@@ -4,7 +4,7 @@
 #include "caffe/layers/conv_relu_pool_layer.hpp"
 #include "caffe/util/math_functions_intel.hpp"
 #include "caffe/util/cpu_info.hpp"
-#include "caffe/util/sconv.hpp"
+// #include "caffe/util/sconv.hpp"
 
 extern unsigned long long conv_cycles_of_this_batch[1024*16];
 extern std::map<std::string, unsigned long long> total_conv_cycles;
