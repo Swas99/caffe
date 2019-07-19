@@ -179,7 +179,7 @@ ifneq ($(CPU_ONLY), 1)
 endif
 
 # LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 spmp xsmm
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 xsmm
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -486,8 +486,6 @@ endif
 
 all: lib tools examples
 
-SpMP: $(MAKE) -C src/SpMP DBG=$(DBG)
-
 lib: $(STATIC_NAME) $(DYNAMIC_NAME)
 
 everything: $(EVERYTHING_TARGETS)
@@ -602,12 +600,12 @@ $(BUILD_DIR)/.linked:
 $(ALL_BUILD_DIRS): | $(BUILD_DIR_LINK)
 	@ mkdir -p $@
 
-$(DYNAMIC_NAME): $(OBJS) SpMP | $(LIB_BUILD_DIR)
+$(DYNAMIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo LD -o $@
 	$(Q)$(CXX) -shared -o $@ $(OBJS) $(VERSIONFLAGS) $(LINKFLAGS) $(LDFLAGS)
 	@ cd $(BUILD_DIR)/lib; rm -f $(DYNAMIC_NAME_SHORT);   ln -s $(DYNAMIC_VERSIONED_NAME_SHORT) $(DYNAMIC_NAME_SHORT)
 
-$(STATIC_NAME): $(OBJS) SpMP | $(LIB_BUILD_DIR)
+$(STATIC_NAME): $(OBJS) | $(LIB_BUILD_DIR)
 	@ echo AR -o $@
 	$(Q)ar rcs $@ $(OBJS)
 
@@ -687,7 +685,6 @@ clean:
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)
-	$(MAKE) -C src/SpMP clean
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
