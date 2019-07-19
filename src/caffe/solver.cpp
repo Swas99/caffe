@@ -44,8 +44,34 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
   Init(param);
 }
 
-template <typename Dtype>
-void Solver<Dtype>::Init(const SolverParameter& param) {
+void Solver<double>::Init(const SolverParameter& param) {
+  CHECK(Caffe::root_solver() || root_solver_)
+      << "root_solver_ needs to be set for all non-root solvers";
+  LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
+    << std::endl << param.DebugString();
+  param_ = param;
+  CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
+  CheckSnapshotWritePermissions();
+  if (Caffe::root_solver() && param_.random_seed() >= 0) {
+    Caffe::set_random_seed(param_.random_seed());
+  }
+  // Scaffolding code
+  InitTrainNet();
+  if (Caffe::root_solver()) {
+    InitTestNets();
+    LOG(INFO) << "Solver scaffolding done.";
+  }
+  iter_ = 0;
+  current_step_ = 0;
+  total_regularization_term_ = 0;
+  prune_threshold_ = param_.prune_threshold();
+  measure_threshold_ = param_.measure_threshold();
+  LOG(INFO) << "prune_threshold = " << prune_threshold_ << " measure_threshold = " << measure_threshold_;
+  LOG(INFO) << "max_threshold_factor = " << param_.max_threshold_factor();
+  LOG(INFO) << "winograd_adjust_threshold = " << param_.winograd_adjust_threshold();
+}
+
+void Solver<float>::Init(const SolverParameter& param) {
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
