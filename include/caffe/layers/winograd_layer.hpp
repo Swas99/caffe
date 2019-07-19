@@ -28,7 +28,7 @@ namespace caffe {
  *   the output channel N' columns of the output matrix.
  */
 template <typename Dtype>
-class Winograd9Layer : public BaseConvolutionLayer<Dtype> {
+class WinogradLayer : public BaseConvolutionLayer<Dtype> {
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
@@ -61,10 +61,10 @@ class Winograd9Layer : public BaseConvolutionLayer<Dtype> {
    *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
    *    kernels + stream parallelism) engines.
    */
-  explicit Winograd9Layer(const LayerParameter& param)
+  explicit WinogradLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
 
-  virtual inline const char* type() const { return "Winograd9"; }
+  virtual inline const char* type() const { return "Winograd"; }
 
   virtual void WeightAlign();
   bool IsReshapedToWinograd();
