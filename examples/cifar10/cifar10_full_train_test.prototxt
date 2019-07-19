@@ -35,7 +35,7 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "data"
   top: "conv1"
   param {
@@ -89,7 +89,7 @@ layer {
 }
 layer {
   name: "conv2"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "norm1"
   top: "conv2"
   param {
@@ -143,7 +143,7 @@ layer {
 }
 layer {
   name: "conv3"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "norm2"
   top: "conv3"
   convolution_param {
