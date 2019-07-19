@@ -12,13 +12,13 @@ bool barrier_initialized = false;
 
 template <>
 void BaseConvolutionLayer<double>::WeightAlign(){
-  NOT_IMPLEMENTED;
+  //NOT_IMPLEMENTED;
 }
 
 template <>
 void BaseConvolutionLayer<float>::WeightAlign()
 {
-  NOT_IMPLEMENTED;
+  //NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
