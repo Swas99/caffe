@@ -3,17 +3,28 @@
 namespace bp = boost::python;
 #endif
 
+#include <map>
+#include <string>
+#include <omp.h>
+
+extern unsigned long long conv_cycles_of_this_batch[1024*16];
+extern std::map<std::string, unsigned long long> total_conv_cycles;
+extern std::map<std::string, double> total_conv_flops;
+extern int total_files;
+
+double get_cpu_freq();
+
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include <cstring>
-#include <map>
-#include <string>
 #include <vector>
+#include <cuda_profiler_api.h>
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
 #include "caffe/util/signal_handler.h"
+#include "caffe/util/math_functions_intel.hpp"
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -54,6 +65,8 @@ DEFINE_string(sigint_effect, "stop",
 DEFINE_string(sighup_effect, "snapshot",
              "Optional; action to take when a SIGHUP signal is received: "
              "snapshot, stop or none.");
+DEFINE_bool(forward_only, false,
+    "Optional; Execute only forward pass");
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
@@ -146,6 +159,21 @@ int device_query() {
 }
 RegisterBrewFunction(device_query);
 
+// Load the weights from the specified caffemodel(s) into the train and
+// test nets.
+void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
+  std::vector<std::string> model_names;
+  boost::split(model_names, model_list, boost::is_any_of(",") );
+  for (int i = 0; i < model_names.size(); ++i) {
+    LOG(INFO) << "Finetuning from " << model_names[i];
+    solver->net()->CopyTrainedLayersFrom(model_names[i]);
+    solver->checkIfLearnableParameterResized();
+    for (int j = 0; j < solver->test_nets().size(); ++j) {
+      solver->test_nets()[j]->CopyTrainedLayersFrom(model_names[i]);
+    }
+  }
+}
+
 // Translate the signal effect the user specified on the command-line to the
 // corresponding enumeration.
 caffe::SolverAction::Enum GetRequestedAction(
@@ -160,6 +188,7 @@ caffe::SolverAction::Enum GetRequestedAction(
     return caffe::SolverAction::NONE;
   }
   LOG(FATAL) << "Invalid signal effect \""<< flag_value << "\" was specified";
+  return caffe::SolverAction::UNKNOWN;
 }
 
 // Train / Finetune a model.
@@ -181,7 +210,6 @@ int train() {
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
   if (FLAGS_gpu.size() == 0
-      && solver_param.has_solver_mode()
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
       if (solver_param.has_device_id()) {
           FLAGS_gpu = "" +
@@ -219,13 +247,6 @@ int train() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  if (FLAGS_snapshot.size()) {
-    solver_param.clear_weights();
-  } else if (FLAGS_weights.size()) {
-    solver_param.clear_weights();
-    solver_param.add_weights(FLAGS_weights);
-  }
-
   shared_ptr<caffe::Solver<float> >
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
@@ -234,17 +255,15 @@ int train() {
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
+  } else if (FLAGS_weights.size()) {
+    CopyLayers(solver.get(), FLAGS_weights);
   }
 
-  LOG(INFO) << "Starting Optimization";
   if (gpus.size() > 1) {
-#ifdef USE_NCCL
-    caffe::NCCL<float> nccl(solver);
-    nccl.Run(gpus, FLAGS_snapshot.size() > 0 ? FLAGS_snapshot.c_str() : NULL);
-#else
-    LOG(FATAL) << "Multi-GPU execution not available - rebuild with USE_NCCL";
-#endif
+    caffe::P2PSync<float> sync(solver, NULL, solver->param());
+    sync.Run(gpus);
   } else {
+    LOG(INFO) << "Starting Optimization";
     solver->Solve();
   }
   LOG(INFO) << "Optimization Done.";
@@ -255,6 +274,7 @@ RegisterBrewFunction(train);
 
 // Test: score a model.
 int test() {
+  //openblas_set_num_threads(1);
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
   vector<string> stages = get_stages_from_flags();
@@ -285,8 +305,10 @@ int test() {
   float loss = 0;
   for (int i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
+    //CUDA_CHECK(cudaProfilerStart());
     const vector<Blob<float>*>& result =
         caffe_net.Forward(&iter_loss);
+    //CUDA_CHECK(cudaProfilerStop());
     loss += iter_loss;
     int idx = 0;
     for (int j = 0; j < result.size(); ++j) {
@@ -299,11 +321,13 @@ int test() {
         } else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
-            caffe_net.output_blob_indices()[j]];
-        LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
+        //const std::string& output_name = caffe_net.blob_names()[
+        //   caffe_net.output_blob_indices()[j]];
+        //LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
       }
     }
+    caffe_net.PrintTestTime();
+    LOG(INFO) << "Total forwarding time: " << caffe_net.GetTotalTime()/1000 << " ms";
   }
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
@@ -320,6 +344,18 @@ int test() {
     }
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
+
+  if (!total_conv_cycles.empty()) {
+    total_files /= total_conv_cycles.size(); // compensate for duplicated counts at each conv layer
+    LOG(INFO) << "Total-images-processed: " << total_files;
+    std::map<std::string, unsigned long long>::const_iterator itr;
+    for (itr = total_conv_cycles.begin(); itr != total_conv_cycles.end(); ++itr) {
+      LOG(INFO) << itr->first << " K-cycles-per-file " << itr->second/total_files/1e3 <<
+          " mFlops-per-file " << total_conv_flops[itr->first]/total_files/1e6 <<
+          " GF/s " << total_conv_flops[itr->first]/(itr->second/get_cpu_freq())/1e9;
+    }
+  }
+//  LOG(INFO) << "Time-taken-per-image: " << (double)total_conv_cycles/total_files/1e3;
 
   return 0;
 }
@@ -345,6 +381,7 @@ int time() {
   }
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, phase, FLAGS_level, &stages);
+  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
@@ -354,8 +391,10 @@ int time() {
   float initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
-  LOG(INFO) << "Performing Backward";
-  caffe_net.Backward();
+  if (!FLAGS_forward_only) {
+    LOG(INFO) << "Performing Backward";
+    caffe_net.Backward();
+  }
 
   const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
@@ -383,16 +422,21 @@ int time() {
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
     forward_time += forward_timer.MicroSeconds();
-    backward_timer.Start();
-    for (int i = layers.size() - 1; i >= 0; --i) {
-      timer.Start();
-      layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
-                          bottom_vecs[i]);
-      backward_time_per_layer[i] += timer.MicroSeconds();
+    if (!FLAGS_forward_only) {
+      backward_timer.Start();
+      for (int i = layers.size() - 1; i >= 0; --i) {
+        timer.Start();
+        layers[i]->Backward(top_vecs[i], bottom_need_backward[i],
+                            bottom_vecs[i]);
+        backward_time_per_layer[i] += timer.MicroSeconds();
+      }
+      backward_time += backward_timer.MicroSeconds();
+      LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
+        << iter_timer.MilliSeconds() << " ms.";
+    } else {
+      LOG(INFO) << "Iteration: " << j + 1 << " forward time: "
+        << iter_timer.MilliSeconds() << " ms.";
     }
-    backward_time += backward_timer.MicroSeconds();
-    LOG(INFO) << "Iteration: " << j + 1 << " forward-backward time: "
-      << iter_timer.MilliSeconds() << " ms.";
   }
   LOG(INFO) << "Average time per layer: ";
   for (int i = 0; i < layers.size(); ++i) {
@@ -400,17 +444,21 @@ int time() {
     LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
       "\tforward: " << forward_time_per_layer[i] / 1000 /
       FLAGS_iterations << " ms.";
-    LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
-      "\tbackward: " << backward_time_per_layer[i] / 1000 /
-      FLAGS_iterations << " ms.";
+    if (!FLAGS_forward_only) {
+      LOG(INFO) << std::setfill(' ') << std::setw(10) << layername  <<
+        "\tbackward: " << backward_time_per_layer[i] / 1000 /
+        FLAGS_iterations << " ms.";
+    }
   }
   total_timer.Stop();
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
-    FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
-    FLAGS_iterations << " ms.";
+  if (!FLAGS_forward_only) {
+    LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+      FLAGS_iterations << " ms.";
+    LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+      FLAGS_iterations << " ms.";
+  }
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
@@ -418,6 +466,10 @@ int time() {
 RegisterBrewFunction(time);
 
 int main(int argc, char** argv) {
+
+  printf("freq = %g\n", get_cpu_freq());
+
+   //CUDA_CHECK(cudaProfilerInitialize());
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
   // Set version
