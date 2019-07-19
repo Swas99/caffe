@@ -5,7 +5,7 @@
 namespace caffe {
 
     template<typename Dtype>
-    void WinogradLayer<Dtype>::compute_output_shape() {
+    void Winograd9Layer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.cpu_data();
         const int *stride_data = this->stride_.cpu_data();
         const int *pad_data = this->pad_.cpu_data();
@@ -22,7 +22,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void WinogradLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
+    void Winograd9Layer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const Dtype *weight = this->blobs_[0]->cpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
@@ -50,7 +50,7 @@ namespace caffe {
 
 
     template<typename Dtype>
-    void WinogradLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype> *> &top,
+    void Winograd9Layer<Dtype>::Backward_cpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
         const Dtype *weight = this->blobs_[0]->cpu_data();
@@ -90,9 +90,9 @@ namespace caffe {
 
 #ifdef CPU_ONLY
 
-    STUB_GPU(WinogradLayer);
+    STUB_GPU(Winograd9Layer);
 #endif
 
-    INSTANTIATE_CLASS(WinogradLayer);
+    INSTANTIATE_CLASS(Winograd9Layer);
 
 }  // namespace caffe

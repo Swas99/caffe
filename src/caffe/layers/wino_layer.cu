@@ -49,7 +49,7 @@ namespace caffe {
 
     
     template<typename Dtype>
-    void WinogradLayer<Dtype>::compute_output_shape() {
+    void Winograd9Layer<Dtype>::compute_output_shape() {
         const int *kernel_shape_data = this->kernel_shape_.gpu_data();
         const int *stride_data = this->stride_.gpu_data();
         const int *pad_data = this->pad_.gpu_data();
@@ -66,7 +66,7 @@ namespace caffe {
     }
 
     template<typename Dtype>
-    void WinogradLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+    void Winograd9Layer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                               const vector<Blob<Dtype> *> &top) {
         const Dtype *weight = this->blobs_[0]->gpu_data();
         for (int i = 0; i < bottom.size(); ++i) {
@@ -112,7 +112,7 @@ namespace caffe {
 
     
     template<typename Dtype>
-    void WinogradLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top,
+    void Winograd9Layer<Dtype>::Backward_gpu(const vector<Blob<Dtype> *> &top,
                                                const vector<bool> &propagate_down,
                                                const vector<Blob<Dtype> *> &bottom) {
 
@@ -156,6 +156,6 @@ namespace caffe {
 
 
 
-    INSTANTIATE_LAYER_GPU_FUNCS(WinogradLayer);
+    INSTANTIATE_LAYER_GPU_FUNCS(Winograd9Layer);
 
 }  // namespace caffe

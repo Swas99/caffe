@@ -128,7 +128,7 @@ __global__ void winograd_input_col2im_gpu_kernel(
 }
 
 template <>
-void Winograd9Layer<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
+void WinogradLayer<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
       const vector<Blob<double>*>& top) {
   NOT_IMPLEMENTED;
 }
@@ -136,7 +136,7 @@ void Winograd9Layer<double>::Forward_gpu(const vector<Blob<double>*>& bottom,
 //#define PROFILE_WINOGRAD
 
 template <>
-void Winograd9Layer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
+void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       const vector<Blob<float>*>& top) {
 
   int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
@@ -266,13 +266,13 @@ void Winograd9Layer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
 }
 
 template <>
-void Winograd9Layer<double>::Backward_gpu(const vector<Blob<double>*>& top,
+void WinogradLayer<double>::Backward_gpu(const vector<Blob<double>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<double>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 
 template <>
-void Winograd9Layer<float>::Backward_gpu(const vector<Blob<float>*>& top,
+void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<float>*>& bottom) {
 
   int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
@@ -474,6 +474,6 @@ void Winograd9Layer<float>::Backward_gpu(const vector<Blob<float>*>& top,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(Winograd9Layer);
+INSTANTIATE_LAYER_GPU_FUNCS(WinogradLayer);
 
 }  // namespace caffe

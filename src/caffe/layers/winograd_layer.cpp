@@ -6,7 +6,7 @@
 namespace caffe {
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::compute_output_shape() {
+void WinogradLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
@@ -23,12 +23,12 @@ void Winograd9Layer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-bool Winograd9Layer<Dtype>::IsReshapedToWinograd() {
+bool WinogradLayer<Dtype>::IsReshapedToWinograd() {
   return !(this->blobs_[0]->shape(2) == this->blobs_[0]->shape(3) && (this->blobs_[0]->shape(2) == 3 || this->blobs_[0]->shape(2) == 5));
 }
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::ReshapeToWinograd() {
+void WinogradLayer<Dtype>::ReshapeToWinograd() {
   if (!IsReshapedToWinograd()) {
     // not yet reshaped
     vector<int> shape;
@@ -41,14 +41,14 @@ void Winograd9Layer<Dtype>::ReshapeToWinograd() {
 }
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::WeightAlign() {
+void WinogradLayer<Dtype>::WeightAlign() {
   BaseConvolutionLayer<Dtype>::WeightAlign();
 
   WeightAlignLocal();
 }
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::WeightAlignLocal() {
+void WinogradLayer<Dtype>::WeightAlignLocal() {
   if (!IsReshapedToWinograd()) {
     // transform weights to Winograd domain
     Dtype* weight_orig = new Dtype[this->blobs_[0]->count()];
@@ -67,7 +67,7 @@ void Winograd9Layer<Dtype>::WeightAlignLocal() {
 }
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void WinogradLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 
@@ -140,7 +140,7 @@ void Winograd9Layer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template<typename Dtype>
-void Winograd9Layer<Dtype>::winograd_input_im2col_cpu(const Dtype *data, Dtype *col_buff)
+void WinogradLayer<Dtype>::winograd_input_im2col_cpu(const Dtype *data, Dtype *col_buff)
 {
   int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
   int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
@@ -168,7 +168,7 @@ void Winograd9Layer<Dtype>::winograd_input_im2col_cpu(const Dtype *data, Dtype *
 }
 
 template<typename Dtype>
-void Winograd9Layer<Dtype>::winograd_output_col2im_cpu(const Dtype *col_buff, Dtype *data)
+void WinogradLayer<Dtype>::winograd_output_col2im_cpu(const Dtype *col_buff, Dtype *data)
 {
   const int output_h = this->output_shape_[0], output_w = this->output_shape_[1];
 
@@ -192,7 +192,7 @@ void Winograd9Layer<Dtype>::winograd_output_col2im_cpu(const Dtype *col_buff, Dt
 }
 
 template<typename Dtype>
-void Winograd9Layer<Dtype>::winograd_output_im2col_cpu(const Dtype *data, Dtype *col_buff)
+void WinogradLayer<Dtype>::winograd_output_im2col_cpu(const Dtype *data, Dtype *col_buff)
 {
   const int output_h = this->output_shape_[0], output_w = this->output_shape_[1];
 
@@ -219,7 +219,7 @@ void Winograd9Layer<Dtype>::winograd_output_im2col_cpu(const Dtype *data, Dtype 
 }
 
 template<typename Dtype>
-void Winograd9Layer<Dtype>::winograd_input_col2im_cpu(const Dtype *col_buff, Dtype *data)
+void WinogradLayer<Dtype>::winograd_input_col2im_cpu(const Dtype *col_buff, Dtype *data)
 {
   int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
   int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
@@ -248,7 +248,7 @@ void Winograd9Layer<Dtype>::winograd_input_col2im_cpu(const Dtype *col_buff, Dty
 //#define PROFILE_WINOGRAD
 
 template <typename Dtype>
-void Winograd9Layer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void WinogradLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
 
   int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
@@ -340,13 +340,13 @@ void Winograd9Layer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <>
-void Winograd9Layer<double>::Backward_cpu(const vector<Blob<double>*>& top,
+void WinogradLayer<double>::Backward_cpu(const vector<Blob<double>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<double>*>& bottom) {
   NOT_IMPLEMENTED;
 }
 
 template <>
-void Winograd9Layer<float>::Backward_cpu(const vector<Blob<float>*>& top,
+void WinogradLayer<float>::Backward_cpu(const vector<Blob<float>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<float>*>& bottom) {
 
   int kernel_h = this->kernel_shape_.cpu_data()[0], kernel_w = this->kernel_shape_.cpu_data()[1];
@@ -557,10 +557,10 @@ void Winograd9Layer<float>::Backward_cpu(const vector<Blob<float>*>& top,
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(Winograd9Layer);
+STUB_GPU(WinogradLayer);
 #endif
 
-INSTANTIATE_CLASS(Winograd9Layer);
-REGISTER_LAYER_CLASS(Winograd9);
+INSTANTIATE_CLASS(WinogradLayer);
+REGISTER_LAYER_CLASS(Winograd);
 
 }  // namespace caffe
