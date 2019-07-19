@@ -44,6 +44,7 @@ Solver<Dtype>::Solver(const string& param_file, const Solver* root_solver)
   Init(param);
 }
 
+template <>
 void Solver<double>::Init(const SolverParameter& param) {
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
@@ -71,6 +72,7 @@ void Solver<double>::Init(const SolverParameter& param) {
   LOG(INFO) << "winograd_adjust_threshold = " << param_.winograd_adjust_threshold();
 }
 
+template <>
 void Solver<float>::Init(const SolverParameter& param) {
   CHECK(Caffe::root_solver() || root_solver_)
       << "root_solver_ needs to be set for all non-root solvers";
