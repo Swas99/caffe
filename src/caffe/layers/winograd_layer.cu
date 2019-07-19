@@ -165,6 +165,10 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       tile_h_in_, tile_w_in_,
       tile_h_out_, tile_w_out_,
       this->conv_in_channels_, this->num_);
+    CUDA_POST_KERNEL_CHECK;
+
+
+      //here
   }
 }
 
