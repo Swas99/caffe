@@ -201,7 +201,7 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       printf("in_activation_ptrs_: %d\n",in_activation_ptrs_->count());
       printf("weight_ptrs_: %d\n",weight_ptrs_->count());
       printf("out_activation_ptrs_: %d\n",out_activation_ptrs_->count());
-      
+      //here
     }
       // col_buff has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w)
 
@@ -212,7 +212,27 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
         (float)0, temp1_.mutable_gpu_data());
 
 
-      //here
+
+    num_kernels = this->conv_out_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_out_*tile_w_out_;
+    const int output_h = this->output_shape_[0], output_w = this->output_shape_[1];
+    winograd_output_col2im_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
+                                               CAFFE_CUDA_NUM_THREADS>>>(
+      num_kernels,
+      temp1_.gpu_data(), top_data,
+      output_h, output_w,
+      ntiles_h_, ntiles_w_,
+      tile_h_out_, tile_w_out_,
+      this->conv_out_channels_, this->num_); 
+    CUDA_POST_KERNEL_CHECK;
+
+
+    for (int n = 0; n < this->num_; ++n) { // JSP: this->num_ is batch size
+      if (this->bias_term_) {
+        const float* bias = this->blobs_[1]->gpu_data();
+        this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+      }
+    }
+      
   }
 }
 
