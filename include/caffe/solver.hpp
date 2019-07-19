@@ -97,8 +97,6 @@ class Solver {
 
   static float getPruneThreshold() { return prune_threshold_; }
   static float getMeasureThreshold() { return measure_threshold_; }
-  static double getPruneThreshold() { return prune_threshold_; }
-  static double getMeasureThreshold() { return measure_threshold_; }
 
   virtual void checkIfLearnableParameterResized() { }
 
