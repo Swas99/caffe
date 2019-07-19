@@ -23,23 +23,13 @@ class SGDSolver : public Solver<Dtype> {
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
-  virtual void checkIfLearnableParameterResized();
+  virtual void ApplyUpdate();
+  Dtype GetLearningRate();
 
  protected:
   void PreSolve();
-  Dtype GetLearningRate();
-  virtual void ApplyUpdate();
   virtual void Normalize(int param_id);
-  virtual Dtype Regularize(int param_id);
-  virtual Dtype GetSparsity(int param_id);
-  virtual Dtype GetWinogradSparsity(int param_id);
-  virtual Dtype GetWinogradSparsityOld(int param_id);
-  virtual Dtype GetFiberSparsity(int param_id, int mode);
-  virtual Dtype GetSliceSparsity(int param_id, int mode);
-  virtual Dtype GetGroupSparsity(int param_id, bool dimen=true);
-  virtual Dtype GetGroupSparsity(int param_id, int ydimen,int xdimen);
-  virtual void PrintWinogradFiberSliceSparsity();
-  virtual Dtype GroupLassoRegularize(int param_id);
+  virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
   virtual void SnapshotSolverState(const string& model_filename);
@@ -51,14 +41,7 @@ class SGDSolver : public Solver<Dtype> {
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
   //   of gradients/updates and is not needed in snapshots
-  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_, temp_winograd_;
-  vector<shared_ptr<Blob<Dtype> > > unthresholded_; // for dynamic network surgery (DNS)
-
-  vector<shared_ptr<Blob<double> > > temp_winograd_transform_; // temporary buffer for thresholding
-  vector<shared_ptr<Blob<long> > > temp_winograd_transform_ptrs_; // temporary buffer for pointers to be passed to cublasDgelsBatched
-
-  vector<shared_ptr<Blob<double> > > temp_winograd_weight_;
-  vector<shared_ptr<Blob<long> > > temp_winograd_weight_ptrs_;
+  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
@@ -130,8 +113,6 @@ class AdaDeltaSolver : public SGDSolver<Dtype> {
       : SGDSolver<Dtype>(param_file) { AdaDeltaPreSolve(); }
   virtual inline const char* type() const { return "AdaDelta"; }
 
-  virtual void checkIfLearnableParameterResized();
-
  protected:
   void AdaDeltaPreSolve();
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
@@ -155,8 +136,6 @@ class AdamSolver : public SGDSolver<Dtype> {
   explicit AdamSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdamPreSolve(); }
   virtual inline const char* type() const { return "Adam"; }
-
-  virtual void checkIfLearnableParameterResized();
 
  protected:
   void AdamPreSolve();
