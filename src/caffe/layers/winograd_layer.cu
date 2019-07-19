@@ -167,6 +167,12 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       this->conv_in_channels_, this->num_);
     CUDA_POST_KERNEL_CHECK;
 
+    caffe_gpu_gemm<float>(CblasTrans, CblasTrans,
+      tile_h_in_*tile_w_in_, this->num_*M, tile_h_in_*tile_w_in_,
+      (float)1, BKronB->get()->gpu_data(), temp2_.mutable_gpu_data(),
+      (float)0, temp1_.mutable_gpu_data());
+      // temp1_ has (tile_h_in*tile_w_in) x conv_in_channels x num_ x (ntiles_h*ntiles_w) dimension
+
 
       //here
   }
