@@ -94,12 +94,9 @@ class Solver {
    * @brief Returns the solver type.
    */
   virtual inline const char* type() const { return ""; }
-  
-  template <typename Dtype>
-  static Dtype getPruneThreshold() { return (Dtype)prune_threshold_; }
-  
-  template <typename Dtype>
-  static Dtype getMeasureThreshold() { return (Dtype)measure_threshold_; }
+
+  static Dtype getPruneThreshold() { return prune_threshold_; }
+  static Dtype getMeasureThreshold() { return measure_threshold_; }
 
   virtual void checkIfLearnableParameterResized() { }
 
@@ -138,7 +135,6 @@ class Solver {
   // True iff a request to stop early was received.
   bool requested_early_exit_;
 
-  template <typename Dtype>
   static Dtype prune_threshold_, measure_threshold_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
