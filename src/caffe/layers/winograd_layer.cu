@@ -172,6 +172,37 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       (float)1, BKronB->get()->gpu_data(), temp2_.mutable_gpu_data(),
       (float)0, temp1_.mutable_gpu_data());
       // temp1_ has (tile_h_in*tile_w_in) x conv_in_channels x num_ x (ntiles_h*ntiles_w) dimension
+    
+    // Convolution in Winograd domain
+    {
+      float alpha = 1, beta = 0;
+
+      int M = this->conv_out_channels_/this->group_;
+      int N = this->num_*ntiles_h_*ntiles_w_;
+      int K = this->conv_in_channels_/this->group_;
+
+      if (!weight_ptrs_initialized_) {
+        float **weight_ptrs = (float **)weight_ptrs_->mutable_cpu_data();
+        for (int j = 0; j < tile_h_in_*tile_w_in_*this->group_; ++j) {
+          weight_ptrs[j] = 
+            this->blobs_[0]->mutable_gpu_data() +
+            j*(this->conv_out_channels_/this->group_)*(this->conv_in_channels_/this->group_);
+        }
+        weight_ptrs_initialized_ = true;
+      }
+
+      CUBLAS_CHECK(cublasSgemmBatched(
+        Caffe::cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N,
+        N, M, K,
+        &alpha,
+        (const float **)in_activation_ptrs_->gpu_data(), N,
+        (const float **)weight_ptrs_->gpu_data(), K,
+        &beta,
+        (float **)out_activation_ptrs_->mutable_gpu_data(), N,
+        in_activation_ptrs_->count()));
+    }
+      // col_buff has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w)
+
 
 
       //here
