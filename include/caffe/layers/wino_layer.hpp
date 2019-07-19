@@ -66,7 +66,15 @@ explicit Winograd9Layer(const LayerParameter &param)
 
 virtual inline const char *type() const { return "Winograd9"; }
 
+virtual void WeightAlign();
+bool IsReshapedToWinograd();
+void ReshapeToWinograd();
+
+virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top);
+
 protected:
+    void WeightAlignLocal();
     virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                              const vector<Blob<Dtype> *> &top);
 
@@ -82,6 +90,29 @@ protected:
     virtual inline bool reverse_dimensions() { return false; }
 
     virtual void compute_output_shape();
+
+
+    
+  // used in forward pass
+  void winograd_input_im2col_cpu(const Dtype *data, Dtype *col_buff);
+  void winograd_output_col2im_cpu(const Dtype *col_buff, Dtype *data);
+
+  // used in backward pass
+  void winograd_output_im2col_cpu(const Dtype *col_buff, Dtype *data);
+  void winograd_input_col2im_cpu(const Dtype *col_buff, Dtype *data);
+
+  Blob<Dtype> temp1_, temp2_, winograd_weight_;
+
+  // The following variables are initialized in WeightAlign
+  int tile_h_in_, tile_w_in_; /* input tile size */
+  int tile_h_out_, tile_w_out_; /* output tile size */
+  int ntiles_h_, ntiles_w_; /* number of tiles */
+
+  // shared_ptr<Blob<Dtype> >
+  //   in_activation_ptrs_, out_activation_ptrs_, weight_ptrs_, weight_diff_ptrs_;
+  //   /** buffer for pointers to be passed to cubalsSgemmBatched */
+
+  bool weight_ptrs_initialized_, weight_diff_ptrs_initialized_;
 };
 
 }  // namespace caffe
