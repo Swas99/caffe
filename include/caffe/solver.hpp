@@ -81,6 +81,7 @@ class Solver {
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
+    template <typename T>
     friend class Solver;
   };
   const vector<Callback*>& callbacks() const { return callbacks_; }
@@ -95,7 +96,7 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 
   static Dtype getPruneThreshold() { return prune_threshold_; }
-  static Dtype getMeasureThreshold() { return measure_threshold_; }
+  // static Dtype getMeasureThreshold() { return measure_threshold_; }
 
   virtual void checkIfLearnableParameterResized() { }
 
