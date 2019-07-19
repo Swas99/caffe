@@ -95,8 +95,8 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
 
-  static Dtype getPruneThreshold() { return prune_threshold_; }
-  // static Dtype getMeasureThreshold() { return measure_threshold_; }
+  static Dtype getPruneThreshold() { return 0.0001;/*prune_threshold_;*/ }
+  static Dtype getMeasureThreshold() { return 0.0001; /*measure_threshold_;*/ }
 
   virtual void checkIfLearnableParameterResized() { }
 
@@ -135,8 +135,8 @@ class Solver {
   // True iff a request to stop early was received.
   bool requested_early_exit_;
 
-  static Dtype prune_threshold_;
-  static Dtype measure_threshold_;
+  // static Dtype prune_threshold_;
+  // static Dtype measure_threshold_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };
