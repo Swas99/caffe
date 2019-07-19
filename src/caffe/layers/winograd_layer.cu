@@ -201,10 +201,15 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       printf("in_activation_ptrs_: %d\n",in_activation_ptrs_->count());
       printf("weight_ptrs_: %d\n",weight_ptrs_->count());
       printf("out_activation_ptrs_: %d\n",out_activation_ptrs_->count());
-    
+      
     }
       // col_buff has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w)
 
+    // Transform back to time domain
+    caffe_gpu_gemm<float>(CblasTrans, CblasNoTrans,
+        this->conv_out_channels_*this->num_*ntiles_h_*ntiles_w_, tile_h_out_*tile_w_out_, tile_h_in_*tile_w_in_,
+        (float)1, temp2_.gpu_data(), AKronA->get()->gpu_data(),
+        (float)0, temp1_.mutable_gpu_data());
 
 
       //here
