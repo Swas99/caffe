@@ -418,15 +418,18 @@ void BaseConvolutionLayer<float>::WeightAlign()
     }
 
     fprintf(stderr, "total = %d\n", M*conv_in_channels_);
-    for (set<pair<int, unsigned long long> >::reverse_iterator pattern = inverseHist.rbegin(); pattern != inverseHist.rend(); ++pattern) {
-      fprintf(stderr, "%d\n", pattern.first);
-      for (int h = 0; h < kernel_h; ++h) {
+
+    for (auto itr = inverseHist.begin(); itr != inverseHist.end(); itr++) { 
+  		pair<int, unsigned long long> pattern = *itr;
+  		fprintf(stderr, "%d\n", pattern.first);
+  		for (int h = 0; h < kernel_h; ++h) {
         for (int w = 0; w < kernel_w; ++w) {
           fprintf(stderr, "%d ", (pattern.second & (1 << (h*kernel_w + w))) != 0);
         }
         fprintf(stderr, "\n");
       }
     }
+    
   }
 }
 
