@@ -24,8 +24,6 @@
 #include "caffe/util/winograd.hpp"
 
 
-#endif
-
 namespace caffe {
 
 template <typename Dtype>
