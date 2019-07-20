@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <vector>
 #include <omp.h>
-#ifdef __INTEL_COMPILER
-#include <immintrin.h>
-#endif
+// #ifdef __INTEL_COMPILER
+// #include <immintrin.h>
+// #endif
 
 #ifdef _MSC_VER
 #include <intrin.h>
