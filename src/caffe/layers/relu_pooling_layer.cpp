@@ -37,7 +37,6 @@ void ReLUPoolingLayer<float>::Forward_cpu(const vector<Blob<float>*>& bottom,
   // loop to save time, although this results in more code.
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-  {
     int* mask = NULL;  // suppress warnings about uninitalized variables
     if (!use_top_mask) mask = this->max_idx_.mutable_cpu_data();
     if (use_top_mask) {
@@ -163,7 +162,6 @@ void ReLUPoolingLayer<float>::Forward_cpu(const vector<Blob<float>*>& bottom,
       } // for each input layer
     }
     break;
-  }
   case PoolingParameter_PoolMethod_AVE:
   case PoolingParameter_PoolMethod_STOCHASTIC:
     NOT_IMPLEMENTED;

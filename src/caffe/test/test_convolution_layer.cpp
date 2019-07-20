@@ -322,7 +322,9 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
       new ConvolutionLayer<Dtype>(layer_param));
   vector<int> top_shape = this->blob_bottom_->shape();
   top_shape[3] = kNumOutput;
+  EXPECT_TRUE(false) << this->blob_bottom_vec_[0]->shape_string().c_str();
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_TRUE(false) << this->blob_bottom_vec_[0]->shape_string().c_str();
   EXPECT_EQ(top_shape, this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Check against reference convolution.
@@ -344,6 +346,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
       EXPECT_NEAR(value, this->blob_top_->cpu_data()[n * dim + d], 1e-4);
     }
   }
+
 }
 
 TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
@@ -695,7 +698,7 @@ TYPED_TEST(ConvolutionLayerTest, TestNDAgainst2D) {
   }
   ASSERT_EQ(backward_result_nd.count(), backward_result_2d.count());
   for (int i = 0; i < backward_result_2d.count(); ++i) {
-    EXPECT_FLOAT_EQ(backward_result_2d.cpu_diff()[i],
+    EXPECT_EQ(backward_result_2d.cpu_diff()[i],
               backward_result_nd.cpu_diff()[i]);
   }
   ASSERT_EQ(backward_weight_result_nd.count(),

@@ -6,6 +6,11 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/util/libxsmm_spmv.h"
+
+#include "libxsmm.h"
+
+#define OPTIMIZE_FOR_UNIT_BATCH
 
 namespace caffe {
 
@@ -18,8 +23,8 @@ namespace caffe {
 template <typename Dtype>
 class InnerProductLayer : public Layer<Dtype> {
  public:
-  explicit InnerProductLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+  explicit InnerProductLayer(const LayerParameter& param);
+  ~InnerProductLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -28,6 +33,7 @@ class InnerProductLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "InnerProduct"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual void WeightAlign();
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -39,12 +45,22 @@ class InnerProductLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int M_;
-  int K_;
-  int N_;
+  int M_; ///< batch size ///
+  int K_; ///< input size ///
+  int N_; ///< output size ///
   bool bias_term_;
   Blob<Dtype> bias_multiplier_;
   bool transpose_;  ///< if true, assume transposed weights
+
+  libxsmm_spmdm_handle libxsmm_spmdm_handle_;
+#ifdef OPTIMIZE_FOR_UNIT_BATCH
+  libxsmm_spmv_handle libxsmm_spmv_handle_; // for batch size 1
+#endif
+
+  libxsmm_CSR_sparseslice *libxsmm_csr_weight_;
+  int nnz_weight_;
+
+  Dtype *bottom_transposed_;
 };
 
 }  // namespace caffe

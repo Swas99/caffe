@@ -1,5 +1,4 @@
 #include <vector>
-#include <stdio.h>
 
 #include "caffe/layers/winograd_layer.hpp"
 #include "caffe/util/winograd.hpp"
@@ -148,15 +147,22 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
 
   const float* weight = this->blobs_[0]->gpu_data();
 
+#ifdef PROFILE_WINOGRAD
+  CPUTimer timer;
+#endif
+
   for (int i = 0; i < bottom.size(); ++i) {
     const float* bottom_data = bottom[i]->gpu_data();
     float* top_data = top[i]->mutable_gpu_data();
-    
+
     int M = this->conv_in_channels_*ntiles_h_*ntiles_w_;
     int num_kernels = this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_in_*tile_w_in_;
     int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
     int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
 
+#ifdef PROFILE_WINOGRAD
+    timer.Start();
+#endif
     winograd_input_im2col_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
                                               CAFFE_CUDA_NUM_THREADS>>>(
       num_kernels, bottom_data, temp2_.mutable_gpu_data(),
@@ -167,13 +173,26 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       tile_h_out_, tile_w_out_,
       this->conv_in_channels_, this->num_);
     CUDA_POST_KERNEL_CHECK;
+#ifdef PROFILE_WINOGRAD
+    LOG(INFO) << "winograd_input_im2col takes " << timer.MicroSeconds()/1e6;
+#endif
 
+    // Transform input to Winograd domain
+#ifdef PROFILE_WINOGRAD
+    timer.Start();
+#endif
     caffe_gpu_gemm<float>(CblasTrans, CblasTrans,
       tile_h_in_*tile_w_in_, this->num_*M, tile_h_in_*tile_w_in_,
       (float)1, BKronB->get()->gpu_data(), temp2_.mutable_gpu_data(),
       (float)0, temp1_.mutable_gpu_data());
       // temp1_ has (tile_h_in*tile_w_in) x conv_in_channels x num_ x (ntiles_h*ntiles_w) dimension
-    
+#ifdef PROFILE_WINOGRAD
+    LOG(INFO) << "Transformation of bottom takes " << timer.MicroSeconds()/1e6;
+#endif
+
+#ifdef PROFILE_WINOGRAD
+    timer.Start();
+#endif
     // Convolution in Winograd domain
     {
       float alpha = 1, beta = 0;
@@ -192,29 +211,36 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
         weight_ptrs_initialized_ = true;
       }
 
-
-      printf("N: %d\n",N);
-      printf("M: %d\n",M);
-      printf("K: %d\n",K);
-      //printf("alpha: %d\n",alpha);
-      //printf("beta: %d\n",beta);
-      //printf("in_activation_ptrs_: %d\n",in_activation_ptrs_->count());
-      //printf("weight_ptrs_: %d\n",weight_ptrs_->count());
-      //printf("out_activation_ptrs_: %d\n",out_activation_ptrs_->count());
-
-      //-->>>here
-    
+      CUBLAS_CHECK(cublasSgemmBatched(
+        Caffe::cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_N,
+        N, M, K,
+        &alpha,
+        (const float **)in_activation_ptrs_->gpu_data(), N,
+        (const float **)weight_ptrs_->gpu_data(), K,
+        &beta,
+        (float **)out_activation_ptrs_->mutable_gpu_data(), N,
+        in_activation_ptrs_->count()));
     }
       // col_buff has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w)
+#ifdef PROFILE_WINOGRAD
+    LOG(INFO) << "Convolution takes " << timer.MicroSeconds()/1e6;
+#endif
 
     // Transform back to time domain
+#ifdef PROFILE_WINOGRAD
+    timer.Start();
+#endif
     caffe_gpu_gemm<float>(CblasTrans, CblasNoTrans,
         this->conv_out_channels_*this->num_*ntiles_h_*ntiles_w_, tile_h_out_*tile_w_out_, tile_h_in_*tile_w_in_,
         (float)1, temp2_.gpu_data(), AKronA->get()->gpu_data(),
         (float)0, temp1_.mutable_gpu_data());
+#ifdef PROFILE_WINOGRAD
+    LOG(INFO) << "Inverse transformation of top takes " << timer.MicroSeconds()/1e6;
+#endif
 
-
-
+#ifdef PROFILE_WINOGRAD
+    timer.Start();
+#endif
     num_kernels = this->conv_out_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_out_*tile_w_out_;
     const int output_h = this->output_shape_[0], output_w = this->output_shape_[1];
     winograd_output_col2im_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
@@ -226,7 +252,9 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
       tile_h_out_, tile_w_out_,
       this->conv_out_channels_, this->num_); 
     CUDA_POST_KERNEL_CHECK;
-
+#ifdef PROFILE_WINOGRAD
+    LOG(INFO) << "winograd_output_col2im takes " << timer.MicroSeconds()/1e6;
+#endif
 
     for (int n = 0; n < this->num_; ++n) { // JSP: this->num_ is batch size
       if (this->bias_term_) {
@@ -234,7 +262,6 @@ void WinogradLayer<float>::Forward_gpu(const vector<Blob<float>*>& bottom,
         this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
-      
   }
 }
 
@@ -257,7 +284,7 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
   const float* weight = this->blobs_[0]->gpu_data();
   float* weight_diff = this->blobs_[0]->mutable_gpu_diff();
 
-  /*const float *weight_cpu = this->blobs_[0]->cpu_data();
+	/*const float *weight_cpu = this->blobs_[0]->cpu_data();
   fprintf(stderr, "weight_winograd\n");
   for (int j = 0; j < tile_h_in_*tile_w_in_; ++j) {
     for (int n = 0; n < this->conv_out_channels_; ++n) {
@@ -268,8 +295,12 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
     fprintf(stderr, "\n");
   }*/
 
+#ifdef PROFILE_WINOGRAD
+  CPUTimer timer;
+#endif
+
   for (int i = 0; i < top.size(); ++i) {
-     const float* top_diff = top[i]->gpu_diff();
+    const float* top_diff = top[i]->gpu_diff();
     const float* bottom_data = bottom[i]->gpu_data();
     float* bottom_diff = bottom[i]->mutable_gpu_diff();
     // Bias gradient, if necessary.
@@ -286,6 +317,9 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
       const int height = this->conv_input_shape_.cpu_data()[1], width = this->conv_input_shape_.cpu_data()[2];
       const int pad_h = this->pad_.cpu_data()[0], pad_w = this->pad_.cpu_data()[1];
 
+#ifdef PROFILE_WINOGRAD
+      timer.Start();
+#endif
       winograd_output_im2col_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
                                                  CAFFE_CUDA_NUM_THREADS>>>(
         num_kernels,
@@ -295,18 +329,28 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
         tile_h_out_, tile_w_out_,
         this->conv_out_channels_, this->num_);
       CUDA_POST_KERNEL_CHECK;
+#ifdef PROFILE_WINOGRAD
+      LOG(INFO) << "winograd_output_im2col takes " << timer.MicroSeconds()/1e6;
+#endif
 
       // Transform out_diff to Winograd domain
-
+#ifdef PROFILE_WINOGRAD
+      timer.Start();
+#endif
       caffe_gpu_gemm<float>(CblasNoTrans, CblasTrans,
           tile_h_in_*tile_w_in_, this->num_*M, tile_h_out_*tile_w_out_,
           (float)1, AKronA->get()->gpu_data(), temp1_.mutable_gpu_data(),
           (float)0, temp2_.mutable_gpu_data());
       // temp2_ has (tile_h_in*tile_w_in) x conv_out_channels x num_ x (ntiles_h*ntiles_w) dimension
+#ifdef PROFILE_WINOGRAD
+      LOG(INFO) << "Transformation of top_diff takes " << timer.MicroSeconds()/1e6;
+#endif
 
       // gradient w.r.t. weight. Note that we will accumulate diffs.
       if (this->param_propagate_down_[0]) {
-
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         int num_kernels = this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_in_*tile_w_in_;
 
         winograd_input_im2col_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
@@ -319,15 +363,26 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
           tile_h_out_, tile_w_out_,
           this->conv_in_channels_, this->num_);
         CUDA_POST_KERNEL_CHECK;
-
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "winograd_input_im2col takes " << timer.MicroSeconds()/1e6;
+#endif
 
         // Transform input to Winograd domain
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         caffe_gpu_gemm<float>(CblasTrans, CblasTrans,
             tile_h_in_*tile_w_in_, this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_, tile_h_in_*tile_w_in_,
             (float)1, BKronB->get()->gpu_data(), this->col_buffer_.mutable_gpu_data(),
             (float)0, temp1_.mutable_gpu_data());
         // temp1_ has (tile_h_in*tile_w_in) x conv_in_channels x num_ x (ntiles_h*ntiles_w) dimension
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "Transformation of bottom takes " << timer.MicroSeconds()/1e6;
+#endif
 
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         if (!weight_diff_ptrs_initialized_) {
           float **weight_diff_ptrs = (float **)weight_diff_ptrs_->mutable_cpu_data();
           for (int j = 0; j < tile_h_in_*tile_w_in_*this->group_; ++j) {
@@ -344,27 +399,61 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
         int N = this->conv_in_channels_/this->group_;
         int K = this->num_*ntiles_h_*ntiles_w_;
 
-        //-->> HERE 1
+        CUBLAS_CHECK(cublasSgemmBatched(
+          Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_N,
+          N, M, K,
+          &alpha,
+          (const float **)in_activation_ptrs_->gpu_data(), K,
+          (const float **)out_activation_ptrs_->gpu_data(), K,
+          &beta,
+          (float **)weight_diff_ptrs_->mutable_gpu_data(), N,
+          tile_h_in_*tile_w_in_*this->group_));
           // weight_diff has (tile_h_in*tile_w_in) x (conv_out_channels) x (conv_in_channels/group) dimension
           
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "Convolution for weight gradient takes " << timer.MicroSeconds()/1e6;
+#endif
       } // param_propagate_down_[0]
 
       // gradient w.r.t. bottom data, if necessary.
       if (propagate_down[i]) {
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         // Convolution in Winograd domain
         float alpha = 1, beta = 0;
         int M = this->conv_in_channels_/this->group_;
         int N = this->num_*ntiles_h_*ntiles_w_;
         int K = this->conv_out_channels_/this->group_;
 
-        //-->> HERE 2
+        CUBLAS_CHECK(cublasSgemmBatched(
+          Caffe::cublas_handle(), CUBLAS_OP_N, CUBLAS_OP_T,
+          N, M, K,
+          &alpha,
+          (const float **)out_activation_ptrs_->gpu_data(), N,
+          (const float **)weight_ptrs_->gpu_data(), M,
+          &beta,
+          (float **)in_activation_ptrs_->mutable_gpu_data(), N,
+          in_activation_ptrs_->count()));
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "Convolution for bottom gradient takes " << timer.MicroSeconds()/1e6;
+#endif
 
         // Transform back to time domain
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         caffe_gpu_gemm<float>(CblasTrans, CblasTrans,
             this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_, tile_h_in_*tile_w_in_, tile_h_in_*tile_w_in_,
             (float)1, temp1_.mutable_gpu_data(), BKronB->get()->gpu_data(),
             (float)0, this->col_buffer_.mutable_gpu_data());
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "Inverse transformation of bottom_diff takes " << timer.MicroSeconds()/1e6;
+#endif
 
+#ifdef PROFILE_WINOGRAD
+        timer.Start();
+#endif
         num_kernels = this->conv_in_channels_*this->num_*ntiles_h_*ntiles_w_*tile_h_in_*tile_w_in_;
 
         winograd_input_col2im_gpu_kernel<float><<<CAFFE_GET_BLOCKS(num_kernels),
@@ -377,6 +466,9 @@ void WinogradLayer<float>::Backward_gpu(const vector<Blob<float>*>& top,
           tile_h_in_, tile_w_in_,
           tile_h_out_, tile_w_out_,
           this->conv_in_channels_, this->num_);
+#ifdef PROFILE_WINOGRAD
+        LOG(INFO) << "winograd_input_col2im takes " << timer.MicroSeconds()/1e6;
+#endif
       } // propagate_down_[i]
     }
   }

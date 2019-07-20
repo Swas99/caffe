@@ -71,17 +71,43 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 
 #ifdef USE_OPENCV
 cv::Mat ReadImageToCVMat(const string& filename,
-    const int height, const int width, const bool is_color) {
+    const int height, const int width, const bool is_color, const bool crop) {
   cv::Mat cv_img;
-  int cv_read_flag = (is_color ? cv::IMREAD_COLOR :
-    cv::IMREAD_GRAYSCALE);
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
     LOG(ERROR) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
   if (height > 0 && width > 0) {
-    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+    if(crop){
+    	//First isotropically-rescale
+    	//Then crop the central region
+    	cv::Size img_s = cv_img_origin.size();
+    	double src_hw_rate = (double)img_s.height/(double)img_s.width;
+    	double dst_hw_rate = (double)height/(double)width;
+    	int scaled_height;
+    	int scaled_width;
+    	if(dst_hw_rate>src_hw_rate){
+    		scaled_height = height;
+    		scaled_width = scaled_height/src_hw_rate;
+    		//scale
+    		cv::resize(cv_img_origin, cv_img, cv::Size(scaled_width, scaled_height));
+    		//crop
+    		cv_img = cv_img(cv::Rect((scaled_width-width)/2,0,width,height));
+    	}else{
+    		scaled_width = width;
+    		scaled_height = scaled_width*src_hw_rate;
+    		//scale
+    		cv::resize(cv_img_origin, cv_img, cv::Size(scaled_width, scaled_height));
+    		//crop
+    		cv_img = cv_img(cv::Rect(0,(scaled_height-height)/2,width,height));
+    	}
+
+    }else{
+    	cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+    }
   } else {
     cv_img = cv_img_origin;
   }
@@ -106,7 +132,7 @@ cv::Mat ReadImageToCVMat(const string& filename) {
 static bool matchExt(const std::string & fn,
                      std::string en) {
   size_t p = fn.rfind('.');
-  std::string ext = p != fn.npos ? fn.substr(p+1) : fn;
+  std::string ext = p != fn.npos ? fn.substr(p) : fn;
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
   std::transform(en.begin(), en.end(), en.begin(), ::tolower);
   if ( ext == en )
@@ -118,8 +144,8 @@ static bool matchExt(const std::string & fn,
 
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color,
-    const std::string & encoding, Datum* datum) {
-  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color);
+    const std::string & encoding, Datum* datum, const bool crop) {
+  cv::Mat cv_img = ReadImageToCVMat(filename, height, width, is_color, crop);
   if (cv_img.data) {
     if (encoding.size()) {
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
@@ -179,8 +205,8 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   CHECK(datum.encoded()) << "Datum not encoded";
   const string& data = datum.data();
   std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
-  int cv_read_flag = (is_color ? cv::IMREAD_COLOR :
-    cv::IMREAD_GRAYSCALE);
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
   cv_img = cv::imdecode(vec_data, cv_read_flag);
   if (!cv_img.data) {
     LOG(ERROR) << "Could not decode datum ";

@@ -8,7 +8,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/im2col.hpp"
 
-#include <libxsmm/include/libxsmm.h>
+#include "libxsmm.h"
 #define MAX_THREADS (2048)
 
 namespace caffe {

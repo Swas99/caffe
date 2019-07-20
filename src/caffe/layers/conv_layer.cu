@@ -55,7 +55,6 @@ void ConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayer);
 
 }  // namespace caffe

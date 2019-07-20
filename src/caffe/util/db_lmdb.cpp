@@ -15,6 +15,8 @@ void LMDB::Open(const string& source, Mode mode) {
   int flags = 0;
   if (mode == READ) {
     flags = MDB_RDONLY | MDB_NOTLS;
+    // Set the mapsize to the minimum allowed
+    MDB_CHECK(mdb_env_set_mapsize(mdb_env_, 1));
   }
   int rc = mdb_env_open(mdb_env_, source.c_str(), flags, 0664);
 #ifndef ALLOW_LMDB_NOLOCK
@@ -32,7 +34,10 @@ void LMDB::Open(const string& source, Mode mode) {
     MDB_CHECK(rc);
   }
 #endif
-  LOG_IF(INFO, Caffe::root_solver()) << "Opened lmdb " << source;
+  LOG(INFO) << "Opened lmdb " << source;
+  struct MDB_envinfo current_info;
+  MDB_CHECK(mdb_env_info(mdb_env_, &current_info));
+  LOG(INFO) << "Map size is " << current_info.me_mapsize;
 }
 
 LMDBCursor* LMDB::NewCursor() {

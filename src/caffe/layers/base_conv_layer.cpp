@@ -14,6 +14,7 @@
 #include "caffe/layers/conv_relu_pool_lrn_layer.hpp"
 #include "caffe/layers/conv_relu_pool_layer.hpp"
 #include "caffe/util/cpu_info.hpp"
+#include "caffe/util/sconv.hpp"
 #include "caffe/util/winograd.hpp"
 
 namespace caffe {
