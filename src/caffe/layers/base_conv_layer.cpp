@@ -4,6 +4,7 @@
 #ifdef __INTEL_COMPILER
 #include <immintrin.h>
 #endif
+#include <intrin.h>
 
 #include "caffe/filler.hpp"
 #include "caffe/solver.hpp"
@@ -16,6 +17,8 @@
 #include "caffe/util/cpu_info.hpp"
 #include "caffe/util/sconv.hpp"
 #include "caffe/util/winograd.hpp"
+
+#pragma intrinsic(__rdtsc)
 
 namespace caffe {
 
