@@ -275,13 +275,13 @@ void LRNLayer<float>::CrossChannelForward_cpu(
 
 #ifdef __AVX2__
       for (int i = 0; i < channels_ * height_ * width_; i += 8) {
-        __m256 v = _mm256_pow_ps(_mm256_load_ps(scale_data + i), _mm256_set1_ps(-beta_));
+        __m256 v = _mm256_load_ps(scale_data + i); //_mm256_pow_ps(_mm256_load_ps(scale_data + i), _mm256_set1_ps(-beta_));
         v = _mm256_mul_ps(v, _mm256_load_ps(bottom_data + offset + i));
         _mm256_store_ps(top_data + offset + i, v);
       }
 #else
       for (int i = 0; i < channels_ * height_ * width_; i += 8) {
-        __m128 v = _mm_load_ps(scale_data + i); //_mm_pow_ps(_mm_load_ps(scale_data + i), _mm_set1_ps(-beta_));
+        __m128 v = _mm_pow_ps(_mm_load_ps(scale_data + i), _mm_set1_ps(-beta_));
         v = _mm_mul_ps(v, _mm_load_ps(bottom_data + offset + i));
         _mm_store_ps(top_data + offset + i, v);
         v = _mm_pow_ps(_mm_load_ps(scale_data + i + 4), _mm_set1_ps(-beta_));
