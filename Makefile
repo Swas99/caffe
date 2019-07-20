@@ -174,7 +174,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include ./src/libxsmm/include
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -491,7 +491,7 @@ all: lib tools examples
 
 libxsmm:
 	$(MAKE) -C src/libxsmm AVX=$(AVX) OPT=$(OPT) DBG=$(DEBUG) FC=
-	
+
 SpMP:
 	$(MAKE) -C src/SpMP DBG=$(DEBUG)
 
