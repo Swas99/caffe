@@ -355,7 +355,7 @@ else
   ifeq ($(AVX), 2)
     CXXFLAGS += -xCORE-AVX2
   else
-    CXXFLAGS += -xHost
+    CXXFLAGS += -xCORE-AVX2
   endif
 endif
 
