@@ -13,7 +13,10 @@
 
 namespace caffe {
 
+template<typename Dtype>
 Dtype Solver<Dtype>::prune_threshold_;
+
+template<typename Dtype>
 Dtype Solver<Dtype>::measure_threshold_;
 
 template<typename Dtype>
