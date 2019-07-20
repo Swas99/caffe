@@ -29,7 +29,7 @@
 #define SIMDFPTYPE __m256d
 
 #define _MM_LOAD(a) _mm256_load_pd(a)
-#define _MM_LOADU _mm256_loadu_pd
+// #define _MM_LOADU _mm256_loadu_pd
 
 #define _MM_STORE(a, v) _mm256_store_pd((a), v)
 #define _MM_STOREU(a, v) _mm256_storeu_pd((a), v)
