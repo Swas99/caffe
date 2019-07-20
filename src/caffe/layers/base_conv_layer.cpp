@@ -16,7 +16,7 @@
 #include "caffe/layers/base_conv_layer.hpp"
 #include "caffe/util/im2col.hpp"
 #include "caffe/util/math_functions.hpp"
-// #include "caffe/util/math_functions_intel.hpp"
+#include "caffe/util/math_functions_intel.hpp"
 #include "caffe/layers/conv_relu_pool_lrn_layer.hpp"
 #include "caffe/layers/conv_relu_pool_layer.hpp"
 #include "caffe/util/cpu_info.hpp"
