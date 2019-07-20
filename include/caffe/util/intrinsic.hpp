@@ -9,8 +9,6 @@
 #include <x86intrin.h>
 #endif
 
-#include "xmmintrin.h"
-
 #ifdef __AVX512F__
 
 #define VLEN (16)
