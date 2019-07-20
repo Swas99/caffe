@@ -669,7 +669,7 @@ void ConvolutionReLUPoolLRNLayer<float>::Forward_cpu(const vector<Blob<float>*>&
 
 #ifdef __AVX2__
         for (int i = ibegin*8; i < iend*8; i += 8) {
-          __m256 v = _mm256_pow_ps(_mm256_load_ps(scale_data + i), _mm256_set1_ps(-beta_));
+          __m256 v = _mm256_load_ps(scale_data + i);//_mm256_pow_ps(_mm256_load_ps(scale_data + i), _mm256_set1_ps(-beta_));
           v = _mm256_mul_ps(v, _mm256_load_ps(pool_top + offset + i));
           _mm256_store_ps(top_data + offset + i, v);
         }
