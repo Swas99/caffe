@@ -344,6 +344,21 @@ endif
 
 COMMON_FLAGS += -DMKL2017_SUPPORTED
 
+
+ifeq ($(AVX), 3)
+  ifeq ($(MIC), 1)
+    CXXFLAGS += -xMIC-AVX512
+  else
+    CXXFLAGS += -xCORE-AVX512
+  endif
+else
+  ifeq ($(AVX), 2)
+    CXXFLAGS += -xCORE-AVX2
+  else
+    CXXFLAGS += -xHost
+  endif
+endif
+
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
 	LIBRARIES += cudnn
