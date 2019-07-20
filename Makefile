@@ -691,6 +691,7 @@ clean:
 	@- $(RM) -rf $(DISTRIBUTE_DIR)
 	@- $(RM) $(PY$(PROJECT)_SO)
 	@- $(RM) $(MAT$(PROJECT)_SO)
+	$(MAKE) -C src/libxsmm clean
 
 supercleanfiles:
 	$(eval SUPERCLEAN_FILES := $(strip \
