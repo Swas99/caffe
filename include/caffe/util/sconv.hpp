@@ -90,7 +90,7 @@ extern unsigned long long conv_cycles_of_this_batch[1024*16], transpose_cycle, p
 static void printv_pd(__m256d v, char *str)
 {
   int i;
-  __declspec(align(64)) double tmp[4];
+  __declspec(std::align(64)) double tmp[4];
   printf("%s:", str);
   _mm256_store_pd(tmp, v);
   for(i=0; i < 4; i++)
@@ -101,7 +101,7 @@ static void printv_pd(__m256d v, char *str)
 static void printv_ps(__m256 v, char *str)
 {
   int i;
-  __declspec(align(64)) float tmp[8];
+  __declspec(std::align(64)) float tmp[8];
   printf("%s:", str);
   _mm256_store_ps(tmp, v);
   for(i=0; i < 8; i++)
