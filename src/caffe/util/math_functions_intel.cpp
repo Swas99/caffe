@@ -10,11 +10,11 @@
 // #ifdef __INTEL_COMPILER
 // #include <immintrin.h>
 // #endif
-#ifdef _MSC_VER
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#endif
+// #ifdef _MSC_VER
+// #include <intrin.h>
+// #else
+// #include <x86intrin.h>
+// #endif
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions_intel.hpp"
