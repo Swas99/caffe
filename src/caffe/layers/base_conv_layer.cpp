@@ -5,6 +5,12 @@
 #include <immintrin.h>
 #endif
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
+
 #include "caffe/filler.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/layers/base_conv_layer.hpp"
