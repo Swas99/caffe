@@ -242,6 +242,7 @@ void ConvolutionReLUPoolLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
 
         switch (this->layer_param_.pooling_param().pool()) {
         case PoolingParameter_PoolMethod_MAX:
+        {
           // The main loop
           int len = middle_[i]->offset(0, 1);
 
@@ -314,6 +315,7 @@ void ConvolutionReLUPoolLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bo
             } // !use_top_mask
           } // for each channel
           break;
+        }
         case PoolingParameter_PoolMethod_AVE:
           NOT_IMPLEMENTED;
           break;
