@@ -90,7 +90,7 @@ extern unsigned long long conv_cycles_of_this_batch[1024*16], transpose_cycle, p
 static void printv_pd(__m256d v, char *str)
 {
   int i;
-  __declspec(std::align(64)) double tmp[4];
+  __attribute__ ((aligned(64))) double tmp[4];
   printf("%s:", str);
   _mm256_store_pd(tmp, v);
   for(i=0; i < 4; i++)
@@ -101,7 +101,7 @@ static void printv_pd(__m256d v, char *str)
 static void printv_ps(__m256 v, char *str)
 {
   int i;
-  __declspec(std::align(64)) float tmp[8];
+  __attribute__ ((aligned(64))) float tmp[8];
   printf("%s:", str);
   _mm256_store_ps(tmp, v);
   for(i=0; i < 8; i++)
@@ -174,7 +174,7 @@ static /*inline*/ void __attribute__((noinline)) sconv_unit_stride(
 #ifdef __AVX512F__
   __mmask16 mask_v = (1 << (WOUT%VLEN)) - 1;
 #else
-  __declspec(aligned(64)) int mask_temp[VLEN] = { 0 };
+  __attribute__ ((aligned(64))) int mask_temp[VLEN] = { 0 };
   for (int i = 0; i < WOUT%VLEN; ++i) {
     mask_temp[i] = -1;
   }
