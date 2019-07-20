@@ -1,13 +1,13 @@
 #ifndef _CAFFE_UTIL_INTRINSIC_HPP_
 #define _CAFFE_UTIL_INTRINSIC_HPP_
 
-// #include <immintrin.h>
+#include <immintrin.h>
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#endif
+// #ifdef _MSC_VER
+// #include <intrin.h>
+// #else
+// #include <x86intrin.h>
+// #endif
 
 #ifdef __AVX512F__
 
@@ -85,7 +85,7 @@
 
 #define _MM_STORE(a, b) _mm_store_ps(a, b)
 #define _MM_STOREU(a, b) _mm_storeu_ps(a, b)
-// #define _MM_MASK_STORE(a, mask, b) _mm_maskstore_ps(a, mask, b)
+#define _MM_MASK_STORE(a, mask, b) _mm_maskstore_ps(a, mask, b)
 
 #endif
 

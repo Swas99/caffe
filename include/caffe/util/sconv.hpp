@@ -397,7 +397,7 @@ _Pragma("unroll(REG_BLOCK_W)") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
               }
             }
           } // FUSE_RELU
@@ -422,7 +422,7 @@ _Pragma("unroll(REG_BLOCK_W)") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, sum[h - hbegin][w]);
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
               }
             }
           } // !FUSE_RELU
@@ -458,7 +458,7 @@ _Pragma("unroll(REG_BLOCK_W)") \
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
                 }
                 assert((oc*WOUT + h)*WOUT + VLEN*w + WOUT%VLEN <= out_channels*WOUT*WOUT);
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO())); // invalid memory access reported from inspector (called from conv_relu_pool layer)
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO())); // invalid memory access reported from inspector (called from conv_relu_pool layer)
               }
             }
           }
@@ -478,7 +478,7 @@ _Pragma("unroll(REG_BLOCK_W)") \
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, sum[h - hbegin][w]);
                 }
                 assert((oc*WOUT + h)*WOUT + VLEN*w + WOUT%VLEN <= out_channels*WOUT*WOUT);
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]); // invalid memory access reported from inspector (called from conv_relu_pool layer)
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]); // invalid memory access reported from inspector (called from conv_relu_pool layer)
               }
             }
           } // !FUSE_RELU
@@ -572,7 +572,7 @@ _Pragma("unroll(REG_BLOCK_W") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
               }
             }
           }
@@ -597,7 +597,7 @@ _Pragma("unroll(REG_BLOCK_W") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, sum[h - hbegin][w]);
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
               }
             }
           } // !FUSE_RELU
@@ -633,7 +633,7 @@ _Pragma("unroll(REG_BLOCK_W") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, _MM_MAX(sum[h - hbegin][w], _MM_SETZERO()));
               }
             }
           } // FUSE_RELU
@@ -652,7 +652,7 @@ _Pragma("unroll(REG_BLOCK_W") \
                 for (w = 0; w < REG_BLOCK_W - 1; ++w) {
                   _MM_STOREU(output + (oc*WOUT + h)*WOUT + VLEN*w, sum[h - hbegin][w]);
                 }
-                _mm_maskstore_ps(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
+                _MM_MASK_STORE(output + (oc*WOUT + h)*WOUT + VLEN*w, mask_v, sum[h - hbegin][w]);
               }
             }
           } // !FUSE_RELU
