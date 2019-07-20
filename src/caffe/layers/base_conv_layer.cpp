@@ -4,7 +4,6 @@
 #ifdef __INTEL_COMPILER
 #include <immintrin.h>
 #endif
-#include <intrin.h>
 
 #include "caffe/filler.hpp"
 #include "caffe/solver.hpp"
