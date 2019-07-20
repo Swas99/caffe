@@ -23,13 +23,13 @@
 #define SIMD_WIDTH 4
 #define SIMDFPTYPE __m256d
 
-#define _MM_LOAD(a) _mm256_load_pd((val_type *)(a))
+#define _MM_LOAD(a) _mm256_load_pd(a)
 #define _MM_LOADU _mm256_loadu_pd
 
-#define _MM_STORE(a, v) _mm256_store_pd((val_type *)(a), v)
-#define _MM_STOREU(a, v) _mm256_storeu_pd((val_type *)(a), v)
+#define _MM_STORE(a, v) _mm256_store_pd((a), v)
+#define _MM_STOREU(a, v) _mm256_storeu_pd((a), v)
 #define _MM_MASKSTORE _mm256_maskstore_pd
-#define _MM_STREAM(a, v) _mm256_stream_pd((val_type *)(a), v)
+#define _MM_STREAM(a, v) _mm256_stream_pd((a), v)
 #define _MM_PREFETCH1(a) _mm_prefetch((char *)(a), _MM_HINT_T0)
 
 #define _MM_ADD _mm256_add_pd
