@@ -73,7 +73,7 @@ void pool_(const float *input, float *output, int *mask_output, float min = -FLT
 
 #if defined(__AVX2__) && !defined(__AVX512F__)
     if (1 == STRIDE_H) {
-      __declspec(aligned(64)) int identity[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+      __attribute__ ((aligned(64))) int identity[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
       SIMDITYPE identity_v = _MM_LOAD_SI((SIMDITYPE *)identity);
 
       for ( ; pw < ((WIDTH + PAD_W - KERNEL_W + STRIDE_W - 1)/STRIDE_W)/VLEN*VLEN; pw += VLEN) {
@@ -105,7 +105,7 @@ void pool_(const float *input, float *output, int *mask_output, float min = -FLT
       }
     }
     else if (2 == STRIDE_H) {
-      __declspec(aligned(64)) int identity[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+      __attribute__ ((aligned(64))) int identity[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
       __m256i identity_v = _mm256_load_si256((__m256i *)identity);
 
       for ( ; pw < ((WIDTH + PAD_W - KERNEL_W + STRIDE_W - 1)/STRIDE_W)/VLEN*VLEN; pw += VLEN) {
