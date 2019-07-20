@@ -157,7 +157,7 @@ void lrn_(Dtype *top_data, Dtype alpha, Dtype beta, Dtype k, Dtype *padded_squar
             _MM_LOAD(padded_square_data + c*WIDTH + j),
             scale_data_v[j/VLEN]);
 
-        SIMDFPTYPE v = pow(scale_data_v[j/VLEN], _MM_SET1(-beta));
+        SIMDFPTYPE v = pow((double)scale_data_v[j/VLEN], (double)_MM_SET1(-beta));
         v = _MM_MUL(v, _MM_LOAD(bottom_data + offset + i*WIDTH + j));
         _MM_STORE(top_data + offset + i*WIDTH + j, v);
       }
@@ -181,7 +181,7 @@ void lrn_(Dtype *top_data, Dtype alpha, Dtype beta, Dtype k, Dtype *padded_squar
                 _MM_LOAD(padded_square_data + (c - 1)%(SIZE + 1)*WIDTH + j)),
             scale_data_v[j/VLEN]);
 
-        SIMDFPTYPE v = pow(scale_data_v[j/VLEN], _MM_SET1(-beta));
+        SIMDFPTYPE v = pow((double)scale_data_v[j/VLEN], (double)_MM_SET1(-beta));
         v = _MM_MUL(v, _MM_LOAD(bottom_data + offset + (c*HEIGHT + i)*WIDTH + j));
         _MM_STORE(top_data + offset + (c*HEIGHT + i)*WIDTH + j, v);
       }
