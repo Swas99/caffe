@@ -1,5 +1,6 @@
 #include <vector>
 #include <omp.h>
+#include <cmath>
 
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -156,7 +157,7 @@ void lrn_(Dtype *top_data, Dtype alpha, Dtype beta, Dtype k, Dtype *padded_squar
             _MM_LOAD(padded_square_data + c*WIDTH + j),
             scale_data_v[j/VLEN]);
 
-        SIMDFPTYPE v = _MM_POW(scale_data_v[j/VLEN], _MM_SET1(-beta));
+        SIMDFPTYPE v = pow(scale_data_v[j/VLEN], _MM_SET1(-beta));
         v = _MM_MUL(v, _MM_LOAD(bottom_data + offset + i*WIDTH + j));
         _MM_STORE(top_data + offset + i*WIDTH + j, v);
       }
@@ -180,7 +181,7 @@ void lrn_(Dtype *top_data, Dtype alpha, Dtype beta, Dtype k, Dtype *padded_squar
                 _MM_LOAD(padded_square_data + (c - 1)%(SIZE + 1)*WIDTH + j)),
             scale_data_v[j/VLEN]);
 
-        SIMDFPTYPE v = _MM_POW(scale_data_v[j/VLEN], _MM_SET1(-beta));
+        SIMDFPTYPE v = pow(scale_data_v[j/VLEN], _MM_SET1(-beta));
         v = _MM_MUL(v, _MM_LOAD(bottom_data + offset + (c*HEIGHT + i)*WIDTH + j));
         _MM_STORE(top_data + offset + (c*HEIGHT + i)*WIDTH + j, v);
       }
@@ -281,10 +282,10 @@ void LRNLayer<float>::CrossChannelForward_cpu(
       }
 #else
       for (int i = 0; i < channels_ * height_ * width_; i += 8) {
-        __m128 v = _mm_pow_ps(_mm_load_ps(scale_data + i), _mm_set1_ps(-beta_));
+        __m128 v = pow_ps(_mm_load_ps(scale_data + i), _mm_set1_ps(-beta_));
         v = _mm_mul_ps(v, _mm_load_ps(bottom_data + offset + i));
         _mm_store_ps(top_data + offset + i, v);
-        v = _mm_pow_ps(_mm_load_ps(scale_data + i + 4), _mm_set1_ps(-beta_));
+        v = pow_ps(_mm_load_ps(scale_data + i + 4), _mm_set1_ps(-beta_));
         v = _mm_mul_ps(v, _mm_load_ps(bottom_data + offset + i + 4));
         _mm_store_ps(top_data + offset + i + 4, v);
       }
