@@ -22,7 +22,7 @@ namespace caffe {
  */
 class DataReader {
  public:
-  // explicit DataReader(const LayerParameter& param);
+  explicit DataReader(const LayerParameter& param);
   ~DataReader();
 
   inline BlockingQueue<Datum*>& free() const {
