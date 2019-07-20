@@ -6,7 +6,7 @@
 // #ifdef _MSC_VER
 // #include <intrin.h>
 // #else
-// #include <x86intrin.h>
+#include <x86intrin.h>
 // #endif
 
 #ifdef __AVX512F__
