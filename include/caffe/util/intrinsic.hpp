@@ -1,7 +1,7 @@
 #ifndef _CAFFE_UTIL_INTRINSIC_HPP_
 #define _CAFFE_UTIL_INTRINSIC_HPP_
 
-// #include <immintrin.h>
+#include <immintrin.h>
 
 #ifdef _MSC_VER
 #include <intrin.h>
