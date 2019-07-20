@@ -357,6 +357,8 @@ void ConvolutionReLUPoolLRNLayer<float>::Forward_cpu(const vector<Blob<float>*>&
 
           switch (this->layer_param_.pooling_param().pool()) {
           case PoolingParameter_PoolMethod_MAX:
+          {
+
             // The main loop
             int len = conv_top_[i]->offset(0, 1);
 
@@ -542,6 +544,7 @@ void ConvolutionReLUPoolLRNLayer<float>::Forward_cpu(const vector<Blob<float>*>&
               } // !use_pool_top_mask
             } // for each channel
             break;
+          }
           case PoolingParameter_PoolMethod_AVE:
             NOT_IMPLEMENTED;
             break;
