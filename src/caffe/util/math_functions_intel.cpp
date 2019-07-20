@@ -288,7 +288,7 @@ static void __attribute__((noinline)) sconv2_fused(
 #else
     // !__AVX2__ && !__AVX512__
     __m128 sum[2][7];
-    __declspec(aligned(64)) int mask_temp[4] = { -1, -1, -1, 0 };
+    __attribute__ ((aligned(64))) int mask_temp[4] = { -1, -1, -1, 0 };
     __m128i mask_v = _mm_load_si128((__m128i *)mask_temp);
 
     for (int h = 0; h < 26; h += 2) {
@@ -405,13 +405,13 @@ static void __attribute__((noinline)) sconv2_fused(
     float *pool_top_data_cur = pool_top + (oc - 7)*POOLED_WIDTH*POOLED_WIDTH;
     int *mask_cur = mask + (oc - 7)*POOLED_WIDTH*POOLED_WIDTH;
 
-    __declspec(aligned(64)) float maximum[8];
+    __attribute__ ((aligned(64))) float maximum[8];
 
-    __declspec(aligned(64)) int identity[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    __attribute__ ((aligned(64))) int identity[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
     __m256i identity_v = _mm256_load_si256((__m256i *)identity);
 
     for (int ph = 0; ph < POOLED_WIDTH; ++ph) {
-      __declspec(aligned(64)) int mask[8];
+      __attribute__ ((aligned(64))) int mask[8];
 
       int hstart = ph * STRIDE_POOL;
       int hend = hstart + K_POOL;
@@ -789,7 +789,7 @@ void caffe_cpu_sconv(
     const int HBLOCK = 8;
     const int WBLOCK = 9;
 
-    __declspec(aligned(64)) float sum[WOUT*WOUT];
+    __attribute__ ((aligned(64))) float sum[WOUT*WOUT];
 
     for (int out_channel = 0; out_channel < out_channels; ++out_channel) {
       int jbegin = rowptr[out_channel];
