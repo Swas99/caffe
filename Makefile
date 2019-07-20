@@ -438,7 +438,8 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
 CXXFLAGS += -msse4.1
 CXXFLAGS += -msse3
-CXXFLAGS += -maes 
+CXXFLAGS += -maes
+CXXFLAGS += -march=nehalem
 
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
