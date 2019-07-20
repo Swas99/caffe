@@ -1,13 +1,13 @@
 #ifndef _CAFFE_UTIL_INTRINSIC_HPP_
 #define _CAFFE_UTIL_INTRINSIC_HPP_
 
-#include <immintrin.h>
+// #include <immintrin.h>
 
-// #ifdef _MSC_VER
-// #include <intrin.h>
-// #else
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
 #include <x86intrin.h>
-// #endif
+#endif
 
 #ifdef __AVX512F__
 
