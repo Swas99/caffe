@@ -412,16 +412,17 @@ void BaseConvolutionLayer<float>::WeightAlign()
     } // for each group
 
     set<pair<int, unsigned long long> > inverseHist;
-    for (map<unsigned long long, int>::iterator pattern = hist.begin(); pattern != hist.end(); ++pattern) {
-      inverseHist.insert(make_pair<int, unsigned long long>(std::move(pattern->second), std::move(pattern->first)));
+    for (auto itr = hist.begin(); itr != hist.end(); itr++) { 
+  		pair<int, unsigned long long> pattern = *itr;
+        inverseHist.insert(make_pair<int, unsigned long long>(pattern.second, pattern.first));
     }
 
     fprintf(stderr, "total = %d\n", M*conv_in_channels_);
     for (set<pair<int, unsigned long long> >::reverse_iterator pattern = inverseHist.rbegin(); pattern != inverseHist.rend(); ++pattern) {
-      fprintf(stderr, "%d\n", pattern->first);
+      fprintf(stderr, "%d\n", pattern.first);
       for (int h = 0; h < kernel_h; ++h) {
         for (int w = 0; w < kernel_w; ++w) {
-          fprintf(stderr, "%d ", (pattern->second & (1 << (h*kernel_w + w))) != 0);
+          fprintf(stderr, "%d ", (pattern.second & (1 << (h*kernel_w + w))) != 0);
         }
         fprintf(stderr, "\n");
       }
