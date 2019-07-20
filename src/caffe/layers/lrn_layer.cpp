@@ -1,6 +1,5 @@
 #include <vector>
 #include <omp.h>
-#include <immintrin.h>
 
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/util/math_functions.hpp"
