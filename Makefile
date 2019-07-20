@@ -436,7 +436,7 @@ LIBRARY_DIRS += $(BLAS_LIB)
 
 LIBRARY_DIRS += $(LIB_BUILD_DIR)
 
-CXXFLAGS += -msse4.1
+CXXFLAGS += -msse4.1 -maes
 
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
