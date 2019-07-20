@@ -85,7 +85,7 @@
 
 #define _MM_STORE(a, b) _mm_store_ps(a, b)
 #define _MM_STOREU(a, b) _mm_storeu_ps(a, b)
-#define _MM_MASK_STORE(a, mask, b) _mm_maskstore_ps(a, mask, b)
+// #define _MM_MASK_STORE(a, mask, b) _mm_maskstore_ps(a, mask, b)
 
 #endif
 
