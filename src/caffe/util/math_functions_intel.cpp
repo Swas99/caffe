@@ -7,8 +7,13 @@
 
 #include <limits>
 #include <omp.h>
-#ifdef __INTEL_COMPILER
-#include <immintrin.h>
+// #ifdef __INTEL_COMPILER
+// #include <immintrin.h>
+// #endif
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
+#include <x86intrin.h>
 #endif
 
 #include "caffe/common.hpp"
