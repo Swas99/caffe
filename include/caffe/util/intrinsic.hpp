@@ -10,7 +10,6 @@
 #endif
 
 #include "xmmintrin.h"
-#include "intrinsic.h"
 
 #ifdef __AVX512F__
 
