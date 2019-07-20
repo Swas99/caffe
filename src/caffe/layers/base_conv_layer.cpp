@@ -23,23 +23,6 @@
 #include "caffe/util/sconv.hpp"
 #include "caffe/util/winograd.hpp"
 
-#if defined(__i386__)
-
-static __inline__ unsigned long long rdtsc(void)
-{
-    unsigned long long int x;
-    __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
-    return x;
-}
-
-#elif defined(__x86_64__)
-
-static __inline__ unsigned long long rdtsc(void)
-{
-    unsigned hi, lo;
-    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-    return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
-}
 
 #endif
 
@@ -899,7 +882,7 @@ void BaseConvolutionLayer<float>::forward_cpu_gemm(const float* input,
 	  	  break;
 	  case caffe::ConvolutionParameter_ConvMode_DIRECT_DCONV:
 	  {
-	    unsigned long long t = rdtsc();
+	    unsigned long long t = __rdtsc();
 
       CHKERR_LIBXSMM_DNN( libxsmm_dnn_copyin_buffer( libxsmm_input_[tid], (void*)input_padded, LIBXSMM_DNN_CONV_FORMAT_NCHW ) );
       CHKERR_LIBXSMM_DNN( libxsmm_dnn_zero_buffer( libxsmm_output_[tid] ) );
@@ -908,7 +891,7 @@ void BaseConvolutionLayer<float>::forward_cpu_gemm(const float* input,
 
       CHKERR_LIBXSMM_DNN( libxsmm_dnn_copyout_buffer( libxsmm_output_[tid], (void*)output, LIBXSMM_DNN_CONV_FORMAT_NCHW ) );
 
-      conv_cycles_of_this_batch[tid*16] = rdtsc() - t;
+      conv_cycles_of_this_batch[tid*16] = __rdtsc() - t;
       break;
 	  }
 	  case caffe::ConvolutionParameter_ConvMode_DIRECT_SCONV:
@@ -1002,11 +985,11 @@ void BaseConvolutionLayer<float>::forward_cpu_gemm(const float* input,
 		  break;
 	  }
 	  default:
-	  conv_cycles_of_this_batch[tid*16] = rdtsc();
+	  conv_cycles_of_this_batch[tid*16] = __rdtsc();
 		caffe_cpu_gemm<float>(CblasNoTrans, CblasNoTrans, M, N, K,
 				  (float)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
 				  (float)0., output + output_offset_ * g);
-		conv_cycles_of_this_batch[tid*16] = rdtsc() - conv_cycles_of_this_batch[tid*16];
+		conv_cycles_of_this_batch[tid*16] = __rdtsc() - conv_cycles_of_this_batch[tid*16];
 		break;
 	  }
   }
