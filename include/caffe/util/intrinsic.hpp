@@ -1,7 +1,7 @@
 #ifndef _CAFFE_UTIL_INTRINSIC_HPP_
 #define _CAFFE_UTIL_INTRINSIC_HPP_
 
-#include <immintrin.h>
+// #include <immintrin.h>
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -48,7 +48,7 @@
 #define _MM_ADD(a, b) _mm256_add_ps(a, b)
 #define _MM_SUB(a, b) _mm256_sub_ps(a, b)
 #define _MM_MUL(a, b) _mm256_mul_ps(a, b)
-#define _MM_POW(a, b) _mm256_pow_pd(a, b)
+#define _MM_POW(a, b) _mm256_mul_pd(a, b)
 #define _MM_FMADD(a, b, c) _mm256_fmadd_ps(a, b, c)
 
 #define _MM_MAX(a, b) _mm256_max_ps(a, b)
