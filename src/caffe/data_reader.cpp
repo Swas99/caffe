@@ -15,7 +15,7 @@ using boost::weak_ptr;
 map<const string, weak_ptr<DataReader::Body> > DataReader::bodies_;
 static boost::mutex bodies_mutex_;
 
-DataReader::DataReader(const LayerParameter& param)
+DataReader::DataReader(const DataReader& param)
     : queue_pair_(new QueuePair(  //
         param.data_param().prefetch() * param.data_param().batch_size())) {
   // Get or create a body
