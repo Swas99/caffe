@@ -14,11 +14,6 @@
 #include "SpMP/synk/barrier.hpp"
 #include "intrinsic.hpp"
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#endif
 
 #ifndef PRECISION
 #define PRECISION 2
