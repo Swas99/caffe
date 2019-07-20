@@ -13,11 +13,8 @@
 
 namespace caffe {
 
-float Solver<float>::prune_threshold_;
-float Solver<float>::measure_threshold_;
-
-double Solver<double>::prune_threshold_;
-double Solver<double>::measure_threshold_;
+Dtype Solver<Dtype>::prune_threshold_;
+Dtype Solver<Dtype>::measure_threshold_;
 
 template<typename Dtype>
 void Solver<Dtype>::SetActionFunction(ActionCallback func) {
