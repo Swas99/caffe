@@ -31,7 +31,7 @@
 #include <libxsmm_intrinsics_x86.h>
 #include <libxsmm.h>
 #include "libxsmm/src/libxsmm_main.h"
-#include "caffe/util/libxsmm_spmv.h"
+#include "caffe/util/libxsmm_spmv.hpp"
 
 #if defined(LIBXSMM_OFFLOAD_TARGET)
 # pragma offload_attribute(push,target(LIBXSMM_OFFLOAD_TARGET))
