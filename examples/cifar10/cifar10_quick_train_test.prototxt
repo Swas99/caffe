@@ -114,7 +114,7 @@ layer {
   bottom: "conv2"
   top: "pool2"
   pooling_param {
-    pool: AVE
+    pool: MAX
     kernel_size: 3
     stride: 2
   }
@@ -156,7 +156,7 @@ layer {
   bottom: "conv3"
   top: "pool3"
   pooling_param {
-    pool: AVE
+    pool: MAX
     kernel_size: 3
     stride: 2
   }
