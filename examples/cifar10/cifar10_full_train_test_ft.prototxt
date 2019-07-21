@@ -1,4 +1,4 @@
-name: "CIFAR10_quick"
+name: "CIFAR10_full"
 layer {
   name: "cifar"
   type: "Data"
@@ -38,11 +38,14 @@ layer {
   type: "Convolution"
   bottom: "data"
   top: "conv1"
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
+    decay_mult: 1
   }
   param {
     lr_mult: 2
+    decay_mult: 1
   }
   convolution_param {
     num_output: 32
@@ -76,15 +79,30 @@ layer {
   top: "pool1"
 }
 layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "pool1"
+  top: "norm1"
+  lrn_param {
+    local_size: 3
+    alpha: 5e-05
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+  }
+}
+layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "pool1"
+  bottom: "norm1"
   top: "conv2"
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
+    decay_mult: 1
   }
   param {
     lr_mult: 2
+    decay_mult: 1
   }
   convolution_param {
     num_output: 32
@@ -118,15 +136,30 @@ layer {
   }
 }
 layer {
+  name: "norm2"
+  type: "LRN"
+  bottom: "pool2"
+  top: "norm2"
+  lrn_param {
+    local_size: 3
+    alpha: 5e-05
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+  }
+}
+layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "pool2"
+  bottom: "norm2"
   top: "conv3"
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 2
+    lr_mult: 1
+    decay_mult: 1
   }
   convolution_param {
     num_output: 64
@@ -166,57 +199,49 @@ layer {
   top: "ip1"
   param {
     lr_mult: 1
+    decay_mult: 0
   }
   param {
     lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 64
-    weight_filler {
-      type: "gaussian"
-      std: 0.1
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-layer {
-  name: "ip2"
-  type: "InnerProduct"
-  bottom: "ip1"
-  top: "ip2"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
+    decay_mult: 0
   }
   inner_product_param {
     num_output: 10
     weight_filler {
       type: "gaussian"
-      std: 0.1
+      std: 0.01
     }
     bias_filler {
       type: "constant"
     }
   }
 }
+
+layer {
+  name: "drop1"
+  type: "Dropout"
+  bottom: "ip1"
+  top: "ip1"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
+
 layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "ip2"
+  bottom: "ip1"
   bottom: "label"
   top: "accuracy"
   include {
     phase: TEST
   }
 }
+
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
-  bottom: "ip2"
+  bottom: "ip1"
   bottom: "label"
   top: "loss"
 }

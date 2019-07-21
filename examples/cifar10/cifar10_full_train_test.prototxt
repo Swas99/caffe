@@ -35,19 +35,23 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
+    decay_mult: 1
+    regularization_type: "L1"
   }
   param {
     lr_mult: 2
+    decay_mult: 1
   }
   convolution_param {
     num_output: 32
     pad: 2
-    kernel_size: 3
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -89,19 +93,23 @@ layer {
 }
 layer {
   name: "conv2"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "norm1"
   top: "conv2"
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
+    decay_mult: 1
+    regularization_type: "L1"
   }
   param {
     lr_mult: 2
+    decay_mult: 1
   }
   convolution_param {
     num_output: 32
     pad: 2
-    kernel_size: 3
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -143,13 +151,23 @@ layer {
 }
 layer {
   name: "conv3"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "norm2"
   top: "conv3"
+  #connectivity_mode: DISCONNECTED_GRPWISE
+  param {
+    lr_mult: 1
+    decay_mult: 1
+    regularization_type: "L1"
+  }
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
   convolution_param {
     num_output: 64
     pad: 2
-    kernel_size: 3
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -182,13 +200,17 @@ layer {
   type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
-    decay_mult: 250
+    decay_mult: 1
+    #decay_mult: 250
+    regularization_type: "L1"
   }
   param {
     lr_mult: 2
-    decay_mult: 0
+    #decay_mult: 0
+    decay_mult: 1
   }
   inner_product_param {
     num_output: 10
@@ -201,6 +223,17 @@ layer {
     }
   }
 }
+
+#layer {
+  #name: "drop1"
+  #type: "Dropout"
+  #bottom: "ip1"
+  #top: "ip1"
+  #dropout_param {
+    #dropout_ratio: 0.5
+  #}
+#}
+
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -211,6 +244,7 @@ layer {
     phase: TEST
   }
 }
+
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
