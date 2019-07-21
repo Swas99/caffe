@@ -22,10 +22,29 @@
 #include "caffe/util/cpu_info.hpp"
 #include "caffe/util/sconv.hpp"
 
-namespace caffe {
-
-
 extern unsigned long long conv_cycles_of_this_batch[1024*16], transpose_cycle, pool_cycle;
+int flop_cnt = 0;
+static const double DEFAULT_CPU_FREQ = 3.33e9;
+double get_cpu_freq()
+{
+  static double freq = DBL_MAX;
+  if (DBL_MAX == freq) {
+    volatile double a = rand()%1024, b = rand()%1024;
+    struct timeval tv1, tv2;
+    gettimeofday(&tv1, NULL);
+    unsigned long long t1 = __rdtsc();
+    for (size_t i = 0; i < 1024L*1024; i++) {
+      a += a*b + b/a;
+    }
+    unsigned long long dt = __rdtsc() - t1;
+    gettimeofday(&tv2, NULL);
+    freq = dt/((tv2.tv_sec - tv1.tv_sec) + (tv2.tv_usec - tv1.tv_usec)/1.e6);
+  }
+
+  return freq;
+}
+
+namespace caffe {
 
 int flop_cnt = 0;
 
