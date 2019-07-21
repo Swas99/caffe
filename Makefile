@@ -174,7 +174,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include ./src/libxsmm/include ./src/libxsmm/src
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include ./src/libxsmm/include ./src/libxsmm/src ./src/SpMP/synk
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
