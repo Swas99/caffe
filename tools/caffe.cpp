@@ -12,7 +12,7 @@ extern std::map<std::string, unsigned long long> total_conv_cycles;
 extern std::map<std::string, double> total_conv_flops;
 extern int total_files;
 
-// double get_cpu_freq();
+double get_cpu_freq();
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
