@@ -12,7 +12,7 @@ layer {
   }
   data_param {
     source: "examples/cifar10/cifar10_train_lmdb"
-    batch_size: 128
+    batch_size: 100
     backend: LMDB
   }
 }
@@ -29,7 +29,7 @@ layer {
   }
   data_param {
     source: "examples/cifar10/cifar10_test_lmdb"
-    batch_size: 128
+    batch_size: 100
     backend: LMDB
   }
 }
@@ -45,11 +45,13 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 20
-    kernel_size: 3
+    num_output: 32
+    pad: 2
+    kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.0001
     }
     bias_filler {
       type: "constant"
@@ -63,7 +65,7 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 2
+    kernel_size: 3
     stride: 2
   }
 }
@@ -85,11 +87,13 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 50
-    kernel_size: 3
+    num_output: 32
+    pad: 2
+    kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
       type: "constant"
@@ -108,8 +112,8 @@ layer {
   bottom: "conv2"
   top: "pool2"
   pooling_param {
-    pool: MAX
-    kernel_size: 2
+    pool: AVE
+    kernel_size: 3
     stride: 2
   }
 }
@@ -127,7 +131,7 @@ layer {
   convolution_param {
     num_output: 64
     pad: 2
-    kernel_size: 3
+    kernel_size: 5
     stride: 1
     weight_filler {
       type: "gaussian"
@@ -150,7 +154,7 @@ layer {
   bottom: "conv3"
   top: "pool3"
   pooling_param {
-    pool: MAX
+    pool: AVE
     kernel_size: 3
     stride: 2
   }
@@ -167,9 +171,10 @@ layer {
     lr_mult: 2
   }
   inner_product_param {
-    num_output: 500
+    num_output: 64
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.1
     }
     bias_filler {
       type: "constant"
@@ -190,7 +195,8 @@ layer {
   inner_product_param {
     num_output: 10
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.1
     }
     bias_filler {
       type: "constant"
