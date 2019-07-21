@@ -6,7 +6,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/util/libxsmm_spmv.h"
+#include "caffe/util/libxsmm_spmv.hpp"
 
 #include "libxsmm.h"
 

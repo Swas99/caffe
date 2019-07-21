@@ -28,8 +28,8 @@
 ******************************************************************************/
 /* Jongsoo Park (Intel Corp.)
 ******************************************************************************/
-#ifndef LIBXSMM_SPMV_H
-#define LIBXSMM_SPMV_H
+#ifndef LIBXSMM_SPMV_HPP
+#define LIBXSMM_SPMV_HPP
 
 #include <libxsmm_macros.h>
 #include <libxsmm_spmdm.h>
@@ -109,4 +109,4 @@ LIBXSMM_API void libxsmm_spmv_compute_fp32_thread(
   int block_id,
   int tid, int nthreads);*/
 
-#endif /*LIBXSMM_SPMV_H*/
+#endif /*LIBXSMM_SPMV_HPP*/
