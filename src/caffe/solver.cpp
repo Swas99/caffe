@@ -295,8 +295,12 @@ void Solver<Dtype>::Step(int iters) {
   }
 }
 
+static char* fileName;
+
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
+  fileName = resume_file;
+
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
@@ -427,7 +431,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
 
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << resume_file << "\n";
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->name() << "\n";
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << fileName << "\n";
     if(output_name.compare("Accuracy") == 0)
     {
       // logProgressToFile(resume_file);
