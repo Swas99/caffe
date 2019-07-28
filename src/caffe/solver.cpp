@@ -430,16 +430,12 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << output_name << ":" << mean_score << "\t" << resume_file << "\n";
     if(output_name.compare("Accuracy") == 0)
     {
-      logProgressToFile(resume_file);
+      // logProgressToFile(resume_file);
     }
 
   }
 }
 
-void logProgressToFile(const char* resume_file)
-{
-
-}
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
