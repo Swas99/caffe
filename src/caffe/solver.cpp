@@ -295,12 +295,10 @@ void Solver<Dtype>::Step(int iters) {
   }
 }
 
-static char* fileName;
+static conschar* fileName;
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
-  fileName = resume_file;
-
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
