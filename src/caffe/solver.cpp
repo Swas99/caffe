@@ -429,7 +429,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
               << mean_score << loss_msg_stream.str();
 
     LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->name() << "\n";
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_ << "\n";
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->data() << "\n";
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->conv_type() << "\n";
     if(output_name.compare("Accuracy") == 0)
     {
       // logProgressToFile(resume_file);
