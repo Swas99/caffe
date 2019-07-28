@@ -174,7 +174,7 @@ ifneq ("$(wildcard $(CUDA_DIR)/lib64)","")
 endif
 CUDA_LIB_DIR += $(CUDA_DIR)/lib
 
-INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include ./src/libxsmm/include ./src/libxsmm/src ./src/SpMP/synk
+INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
@@ -182,7 +182,7 @@ ifneq ($(CPU_ONLY), 1)
 endif
 
 # LIBRARIES += glog gflags protobuf boost_system boost_filesystem m
-LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5 spmp xsmm
 
 # handle IO dependencies
 USE_LEVELDB ?= 1
@@ -342,6 +342,19 @@ else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif
 
+ifeq ($(AVX), 3)
+  ifeq ($(MIC), 1)
+    CXXFLAGS += -xMIC-AVX512
+  else
+    CXXFLAGS += -xCORE-AVX512
+  endif
+else
+  ifeq ($(AVX), 2)
+    CXXFLAGS += -xCORE-AVX2
+  else
+    CXXFLAGS += -xHost
+  endif
+endif
 
 # cuDNN acceleration configuration.
 ifeq ($(USE_CUDNN), 1)
