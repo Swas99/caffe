@@ -427,11 +427,18 @@ void Solver<Dtype>::Test(const int test_net_id) {
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
 
-    LOG(INFO) << output_name << "\n";
-
-    //ADD CSV GENERATION CODE HERE
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << resume_file << "\n";
+    if(output_name.compare("Accuracy") == 0)
+    {
+      logProgressToFile(resume_file);
+    }
 
   }
+}
+
+void logProgressToFile(const char* resume_file)
+{
+
 }
 
 template <typename Dtype>

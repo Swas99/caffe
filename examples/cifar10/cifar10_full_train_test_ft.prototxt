@@ -35,7 +35,7 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
   connectivity_mode: DISCONNECTED_GRPWISE
@@ -92,7 +92,7 @@ layer {
 }
 layer {
   name: "conv2"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "norm1"
   top: "conv2"
   connectivity_mode: DISCONNECTED_GRPWISE
@@ -149,7 +149,7 @@ layer {
 }
 layer {
   name: "conv3"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "norm2"
   top: "conv3"
   connectivity_mode: DISCONNECTED_GRPWISE

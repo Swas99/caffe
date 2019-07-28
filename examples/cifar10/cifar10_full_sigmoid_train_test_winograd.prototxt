@@ -12,7 +12,7 @@ layer {
   }
   data_param {
     source: "examples/cifar10/cifar10_train_lmdb"
-    batch_size: 100
+    batch_size: 111
     backend: LMDB
   }
 }
@@ -35,21 +35,26 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "data"
   top: "conv1"
   param {
     lr_mult: 1
+  }
+  param {
+    lr_mult: 2
   }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
-    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.0001
+    }
+    bias_filler {
+      type: "constant"
     }
   }
 }
@@ -65,70 +70,46 @@ layer {
   }
 }
 
-layer {
-  name: "bn1"
-  type: "BatchNorm"
-  bottom: "pool1"
-  top: "bn1"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
+
 
 layer {
   name: "Sigmoid1"
   type: "Sigmoid"
-  bottom: "bn1"
+  bottom: "pool1"
   top: "Sigmoid1"
 }
 
 layer {
   name: "conv2"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "Sigmoid1"
   top: "conv2"
   param {
     lr_mult: 1
+  }
+  param {
+    lr_mult: 2
   }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
-    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
+    bias_filler {
+      type: "constant"
+    }
   }
 }
 
-layer {
-  name: "bn2"
-  type: "BatchNorm"
-  bottom: "conv2"
-  top: "bn2"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-}
 
 layer {
   name: "Sigmoid2"
   type: "Sigmoid"
-  bottom: "bn2"
+  bottom: "conv2"
   top: "Sigmoid2"
 }
 layer {
@@ -144,47 +125,38 @@ layer {
 }
 layer {
   name: "conv3"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "pool2"
   top: "conv3"
-  param {
-    lr_mult: 1
-  }
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
     stride: 1
-    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
+    bias_filler {
+      type: "constant"
+    }
   }
-}
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 1
+  }
 
-layer {
-  name: "bn3"
-  type: "BatchNorm"
-  bottom: "conv3"
-  top: "bn3"
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
-  param {
-    lr_mult: 0
-  }
 }
 
 layer {
   name: "Sigmoid3"
   type: "Sigmoid"
-  bottom: "bn3"
+  bottom: "conv3"
   top: "Sigmoid3"
 }
+
 layer {
   name: "pool3"
   type: "Pooling"
@@ -204,10 +176,10 @@ layer {
   top: "ip1"
   param {
     lr_mult: 1
-    decay_mult: 1
+    decay_mult: 0
   }
   param {
-    lr_mult: 1
+    lr_mult: 2
     decay_mult: 0
   }
   inner_product_param {
