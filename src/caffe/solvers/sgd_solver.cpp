@@ -235,7 +235,7 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 	//	  this->net_->params_weight_decay();
 	//Dtype weight_decay = this->param_.weight_decay();
 	ostringstream sparsity_msg_stream;
-	sparsity_msg_stream << "    Element Sparsity %: \n";
+	// sparsity_msg_stream << "    Element Sparsity %: \n";
 	for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
 		//Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
     if (this->net_->learnable_params()[param_id]->num_axes() >= 2) {
@@ -246,8 +246,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 	}
 	//LOG(INFO) << sparsity_msg_stream.str();
 
-	sparsity_msg_stream.str("");
-	sparsity_msg_stream << "     Winograd Sparsity %: \n";
+	// sparsity_msg_stream.str("");
+	// sparsity_msg_stream << "     Winograd Sparsity %: \n";
 	for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() >= 2) {
 		  sparsity_msg_stream << GetWinogradSparsity(param_id) <<"\t";
@@ -255,8 +255,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 	}
 	//LOG(INFO) << sparsity_msg_stream.str();
 
-	sparsity_msg_stream.str("");
-	sparsity_msg_stream << "     Winograd Old Sparsity %: \n";
+	// sparsity_msg_stream.str("");
+	// sparsity_msg_stream << "     Winograd Old Sparsity %: \n";
 	for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() >= 2) {
 		  sparsity_msg_stream << GetWinogradSparsityOld(param_id) <<"\t";
@@ -307,8 +307,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 	//LOG(INFO) << sparsity_msg_stream.str();
 #endif
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        OC-fiber Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        OC-fiber Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetFiberSparsity(param_id, 0) <<"\t";
@@ -316,8 +316,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   // //LOG(INFO) << sparsity_msg_stream.str();
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        IC-fiber Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        IC-fiber Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetFiberSparsity(param_id, 1) <<"\t";
@@ -325,8 +325,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   //LOG(INFO) << sparsity_msg_stream.str();
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        kernel-fiber Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        kernel-fiber Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetFiberSparsity(param_id, 2) <<"\t";
@@ -334,8 +334,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   //LOG(INFO) << sparsity_msg_stream.str();
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        OC-slice Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        OC-slice Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetSliceSparsity(param_id, 0) <<"\t";
@@ -343,8 +343,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   //LOG(INFO) << sparsity_msg_stream.str();
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        IC-slice Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        IC-slice Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetSliceSparsity(param_id, 1) <<"\t";
@@ -352,8 +352,8 @@ void SGDSolver<Dtype>::ApplyUpdate() {
   }
   //LOG(INFO) << sparsity_msg_stream.str();
 
-  sparsity_msg_stream.str("");
-  sparsity_msg_stream << "        kernel-slice Sparsity %: \n";
+  // sparsity_msg_stream.str("");
+  // sparsity_msg_stream << "        kernel-slice Sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     if (this->net_->learnable_params()[param_id]->num_axes() == 4) {
       sparsity_msg_stream << GetSliceSparsity(param_id, 2) <<"\t";
@@ -1353,7 +1353,7 @@ void SGDSolver<Dtype>::PrintWinogradFiberSliceSparsity() {
   string regularization_type = this->param_.regularization_type();
 
   ostringstream sparsity_msg_stream;
-  sparsity_msg_stream << "     Winograd fiber/slice sparsity %: \n";
+  //sparsity_msg_stream << "     Winograd fiber/slice sparsity %: \n";
   for (int param_id = 0; param_id < this->net_->learnable_params().size(); ++param_id) {
     Blob<Dtype> *param = this->net_->learnable_params()[param_id];
 
@@ -1386,13 +1386,13 @@ void SGDSolver<Dtype>::PrintWinogradFiberSliceSparsity() {
           A->get()->cpu_data(),
           (Dtype)0, winograd_weights);
 
-        sparsity_msg_stream <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 0, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 0, thre) << "\t" <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 1, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 1, thre) << "\t" <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 2, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 2, thre) << "\n";
+        // sparsity_msg_stream <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 0, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 0, thre) << "\t" <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 1, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 1, thre) << "\t" <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights, 2, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights, 2, thre) << "\n";
           break;
       }
       case Caffe::GPU: {
@@ -1407,13 +1407,13 @@ void SGDSolver<Dtype>::PrintWinogradFiberSliceSparsity() {
           (Dtype)0, winograd_weights);
 
         const Dtype *winograd_weights2 = temp_winograd_[param_id]->cpu_data();
-        sparsity_msg_stream <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 0, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 0, thre) << "\t" <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 1, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 1, thre) << "\t" <<
-          100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 2, thre) << "/" << 
-          100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 2, thre) << "\n";
+        // sparsity_msg_stream <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 0, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 0, thre) << "\t" <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 1, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 1, thre) << "\t" <<
+        //   100*caffe_cpu_fiber_sparsity(N, C, M*M, winograd_weights2, 2, thre) << "/" << 
+        //   100*caffe_cpu_slice_sparsity(N, C, M*M, winograd_weights2, 2, thre) << "\n";
 #else
           NO_GPU;
 #endif
