@@ -1,6 +1,4 @@
-name: "LeNet"
-conv_type: "Winograd"
-data: "MNIST"
+name: "LeNet_MNIST_Winograd"
 layer {
   name: "mnist"
   type: "Data"

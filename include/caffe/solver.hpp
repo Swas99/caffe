@@ -101,6 +101,9 @@ class Solver {
   virtual void checkIfLearnableParameterResized() { }
 
  protected:
+
+  void logProgressToFile(string netName);
+
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   string SnapshotFilename(const string extension);

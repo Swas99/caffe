@@ -122,10 +122,6 @@ class Net {
 
   /// @brief returns the network name.
   inline const string& name() const { return name_; }
-  /// @brief returns the network name.
-  inline const string& data() const { return data_; }
-  /// @brief returns the network name.
-  inline const string& conv_type() const { return conv_type_; }
   /// @brief returns the layer names
   inline const vector<string>& layer_names() const { return layer_names_; }
   /// @brief returns the blob names
@@ -289,10 +285,6 @@ class Net {
 
   /// @brief The network name
   string name_;
-  /// @brief The conv type
-  string conv_type_;
-  /// @brief The dataset
-  string data_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
   /// @brief total testing time

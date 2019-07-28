@@ -1,6 +1,4 @@
-name: "LeNet"
-conv_type: "Spatial"
-data: "MNIST"
+name: "LeNet_MNIST_Spatial"
 layer {
   name: "mnist"
   type: "Data"
