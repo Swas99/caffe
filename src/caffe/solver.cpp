@@ -427,16 +427,17 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
-
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->name() << "\n";
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->data() << "\n";
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->conv_type() << "\n";
-    if(output_name.compare("Accuracy") == 0)
+    if(output_name.compare("accuracy") == 0)
     {
-      // logProgressToFile(resume_file);
+      logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(mean_score));
     }
 
   }
+}
+
+void logProgressToFile(string netName, string iter, string accuracy)
+{
+    LOG(INFO) << netName << ":" << iter << "\t" << accuracy << "\n";
 }
 
 

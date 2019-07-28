@@ -102,7 +102,7 @@ class Solver {
 
  protected:
 
-  void logProgressToFile(string netName);
+  void logProgressToFile(string netName, string iter, string accuracy);
 
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
