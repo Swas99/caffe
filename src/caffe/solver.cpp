@@ -437,7 +437,6 @@ void Solver<Dtype>::Test(const int test_net_id) {
 
 template <typename Dtype>
 void Solver<Dtype>::logProgressToFile(string netName, string iter, string accuracy) { 
-{
     LOG(INFO) << netName << ":" << iter << "\t" << accuracy << "\t" << solver"\n";
 }
 
