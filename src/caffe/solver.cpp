@@ -295,7 +295,6 @@ void Solver<Dtype>::Step(int iters) {
   }
 }
 
-static conschar* fileName;
 
 template <typename Dtype>
 void Solver<Dtype>::Solve(const char* resume_file) {
@@ -430,7 +429,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
               << mean_score << loss_msg_stream.str();
 
     LOG(INFO) << output_name << ":" << mean_score << "\t" << net_->name() << "\n";
-    LOG(INFO) << output_name << ":" << mean_score << "\t" << fileName << "\n";
+    LOG(INFO) << output_name << ":" << mean_score << "\t" << net_ << "\n";
     if(output_name.compare("Accuracy") == 0)
     {
       // logProgressToFile(resume_file);
