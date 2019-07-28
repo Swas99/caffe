@@ -412,6 +412,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -425,6 +426,11 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
+
+    LOG(INFO) << output_name << "\n";
+
+    //ADD CSV GENERATION CODE HERE
+
   }
 }
 
