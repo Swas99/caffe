@@ -460,28 +460,34 @@ std::vector<std::string> split(const std::string &s, char delim) {
 template <typename Dtype>
 void Solver<Dtype>::logProgressToFile(string netName, string iter, string accuracy) {
 
-    vector<string> temp = split(param_.snapshot_prefix(), '/');
-    //examples/cifar10/cifar10_full_lr1_cpu
-    string fileName = temp[2] + ".csv";
-    //KERNAL-SHAPE_CIFAR10_Winograd_CPU
-    temp = split(netName, '_');
-    string net = temp[0];
-    string dataSet = temp[1];
-    string domain = temp[2];
-    string machine = temp[3];
+    try
+    {
+      vector<string> temp = split(param_.snapshot_prefix(), '/');
+      //examples/cifar10/cifar10_full_lr1_cpu
+      string fileName = temp[2] + ".csv";
+      //KERNAL-SHAPE_CIFAR10_Winograd_CPU
+      temp = split(netName, '_');
+      string net = temp[0];
+      string dataSet = temp[1];
+      string domain = temp[2];
+      string machine = temp[3];
 
-    //MNIST    NET_TYPE   CPU   Spatial    10000    [89.7]%    TIME_STAMP
+      //MNIST    NET_TYPE   CPU   Spatial    10000    [89.7]%    TIME_STAMP
 
-    using namespace std::chrono;
-    milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
-    string row = dataSet + "," + net + "," + machine + "," + domain + "," 
-                + iter + "," + accuracy + "," + std::to_string(ms.count()) + "\n";
-    string filePath = "results/" + fileName;
+      using namespace std::chrono;
+      milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+      string row = dataSet + "," + net + "," + machine + "," + domain + "," 
+                  + iter + "," + accuracy + "," + std::to_string(ms.count()) + "\n";
+      string filePath = "results/" + fileName;
 
-    std::ofstream outfile;
-    outfile.open(filePath, std::ios_base::app);
-    outfile << row; 
-
+      std::ofstream outfile;
+      outfile.open(filePath, std::ios_base::app);
+      outfile << row; 
+    }
+    catch(...)
+    {
+      LOG(INFO) << "EXCEPTION WHILE WRITING RESULTS TO CSV";  
+    }
     LOG(INFO) << filePath;
     LOG(INFO) << row;
 }
