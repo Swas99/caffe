@@ -487,13 +487,16 @@ void Solver<Dtype>::logProgressToFile(string netName, string iter, string accura
       std::ofstream outfile;
       outfile.open(filePath, std::ios_base::app);
       outfile << row; 
+      
+      LOG(INFO) << filePath;
+      LOG(INFO) << row;
     }
     catch(...)
     {
       LOG(INFO) << "EXCEPTION WHILE WRITING RESULTS TO CSV";  
+      LOG(INFO) << filePath;
+      LOG(INFO) << row;
     }
-    LOG(INFO) << filePath;
-    LOG(INFO) << row;
 }
 
 
