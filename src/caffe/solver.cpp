@@ -264,6 +264,10 @@ void Solver<Dtype>::Step(int iters) {
           LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
               << score_index++ << ": " << output_name << " = "
               << result_vec[k] << loss_msg_stream.str();
+          if(output_name.compare("accuracy") == 0)
+          {
+            logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(result_vec[k]));
+          }
         }
       }
     }
