@@ -19,9 +19,6 @@
 
 namespace caffe {
 
-
-template<typename Out>
-
 template<typename Dtype>
 Dtype Solver<Dtype>::prune_threshold_;
 
@@ -445,6 +442,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
 }
 
 
+template<typename Out>
 void split(const std::string &s, char delim, Out result) {
     std::stringstream ss(s);
     std::string item;
