@@ -17,9 +17,10 @@
 #include "caffe/util/upgrade_proto.hpp"
 
 
-template<typename Out>
-
 namespace caffe {
+
+
+template<typename Out>
 
 template<typename Dtype>
 Dtype Solver<Dtype>::prune_threshold_;
