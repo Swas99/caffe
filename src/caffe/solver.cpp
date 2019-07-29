@@ -435,7 +435,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
               << mean_score << loss_msg_stream.str();
     if(output_name.compare("accuracy") == 0)
     {
-      logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(mean_score));
+      // logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(mean_score));
     }
 
   }
@@ -462,14 +462,6 @@ void Solver<Dtype>::logProgressToFile(string netName, string iter, string accura
 
     vector<string> temp = split(param_.snapshot_prefix(), '/');
     //examples/cifar10/cifar10_full_lr1_cpu
-    size_t found = temp[2].find("CPU"); 
-    if (found != string::npos)
-    {
-      found = temp[2].find("Winograd"); 
-        if (found != string::npos)
-          return;
-    }
-
     string fileName = temp[2] + ".csv";
     //KERNAL-SHAPE_CIFAR10_Winograd_CPU
     temp = split(netName, '_');
