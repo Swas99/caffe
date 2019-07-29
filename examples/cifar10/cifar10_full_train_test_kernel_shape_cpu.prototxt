@@ -1,4 +1,4 @@
-name: "CIFAR10_full"
+name: "KERNAL-SHAPE_CIFAR10_Spatial_CPU"
 layer {
   name: "cifar"
   type: "Data"
@@ -38,14 +38,18 @@ layer {
   type: "Convolution"
   bottom: "data"
   top: "conv1"
-  connectivity_mode: DISCONNECTED_GRPWISE
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1
+    breadth_decay_mult: 1
   }
   param {
     lr_mult: 2
     decay_mult: 1
+    kernel_shape_decay_mult: 0
+    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
@@ -95,14 +99,18 @@ layer {
   type: "Convolution"
   bottom: "norm1"
   top: "conv2"
-  connectivity_mode: DISCONNECTED_GRPWISE
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1
+    breadth_decay_mult: 1
   }
   param {
     lr_mult: 2
     decay_mult: 1
+    kernel_shape_decay_mult: 0
+    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
@@ -152,14 +160,18 @@ layer {
   type: "Convolution"
   bottom: "norm2"
   top: "conv3"
-  connectivity_mode: DISCONNECTED_GRPWISE
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1
+    breadth_decay_mult: 1
   }
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 0
+    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 64
@@ -197,13 +209,18 @@ layer {
   type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
+  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 0
+    kernel_shape_decay_mult: 0
+    breadth_decay_mult: 0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0
+    breadth_decay_mult: 0
   }
   inner_product_param {
     num_output: 10

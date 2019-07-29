@@ -1,7 +1,12 @@
 #include <cstdio>
-
+#include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
+#include <chrono>
 #ifndef CPU_ONLY
 #include <cuda_profiler_api.h>
 #endif
@@ -10,6 +15,9 @@
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+
+
+template<typename Out>
 
 namespace caffe {
 
@@ -435,9 +443,48 @@ void Solver<Dtype>::Test(const int test_net_id) {
   }
 }
 
+
+void split(const std::string &s, char delim, Out result) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        *(result++) = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+
 template <typename Dtype>
-void Solver<Dtype>::logProgressToFile(string netName, string iter, string accuracy) { 
-    LOG(INFO) << netName << ":" << iter << "\t" << accuracy << "\n";
+void Solver<Dtype>::logProgressToFile(string netName, string iter, string accuracy) {
+
+    vector<string> temp = split(param_.snapshot_prefix(), '/');
+    //examples/cifar10/cifar10_full_lr1_cpu
+    string fileName = temp[2] + ".csv";
+    
+    //KERNAL-SHAPE_CIFAR10_Winograd_CPU
+    temp = split(netName, '_');
+    string net = temp[0];
+    string dataSet = temp[1];
+    string domain = temp[2];
+    string machine = temp[3];
+
+    //MNIST    NET_TYPE   CPU   Spatial    10000    [89.7]%    TIME_STAMP
+
+    using namespace std::chrono;
+    milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+    string row = dataSet + "," + net + "," + machine + "," + domain + "," + iter + "," + accuracy + "," + ms + "\n";
+    string filePath = "results/" + fileName;
+
+    std::ofstream outfile;
+    outfile.open(filePath, std::ios_base::app);
+    outfile << row; 
+
+    LOG(INFO) << filePath;
+    LOG(INFO) << row;
 }
 
 

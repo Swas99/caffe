@@ -1,6 +1,6 @@
-name: "LeNet_MNIST_Spatial"
+name: "SIGMOID_CIFAR10_Spatial_GPU"
 layer {
-  name: "mnist"
+  name: "cifar"
   type: "Data"
   top: "data"
   top: "label"
@@ -8,16 +8,16 @@ layer {
     phase: TRAIN
   }
   transform_param {
-    scale: 0.00390625
+    mean_file: "examples/cifar10/mean.binaryproto"
   }
   data_param {
-    source: "examples/mnist/mnist_train_lmdb"
-    batch_size: 100
+    source: "examples/cifar10/cifar10_train_lmdb"
+    batch_size: 111
     backend: LMDB
   }
 }
 layer {
-  name: "mnist"
+  name: "cifar"
   type: "Data"
   top: "data"
   top: "label"
@@ -25,11 +25,11 @@ layer {
     phase: TEST
   }
   transform_param {
-    scale: 0.00390625
+    mean_file: "examples/cifar10/mean.binaryproto"
   }
   data_param {
-    source: "examples/mnist/mnist_test_lmdb"
-    batch_size: 100
+    source: "examples/cifar10/cifar10_test_lmdb"
+    batch_size: 1000
     backend: LMDB
   }
 }
@@ -45,11 +45,13 @@ layer {
     lr_mult: 2
   }
   convolution_param {
-    num_output: 20
-    kernel_size: 3
+    num_output: 32
+    pad: 2
+    kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.0001
     }
     bias_filler {
       type: "constant"
@@ -63,92 +65,128 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 2
+    kernel_size: 3
     stride: 2
   }
 }
+
+
+
+layer {
+  name: "Sigmoid1"
+  type: "Sigmoid"
+  bottom: "pool1"
+  top: "Sigmoid1"
+}
+
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "pool1"
+  bottom: "Sigmoid1"
   top: "conv2"
   param {
     lr_mult: 1
   }
   param {
     lr_mult: 2
-    #decay_mult: 1.0
-    #kernel_shape_decay_mult: 0.0
-    #breadth_decay_mult: 0.0
   }
   convolution_param {
-    num_output: 50
-    kernel_size: 3
+    num_output: 32
+    pad: 2
+    kernel_size: 5
     stride: 1
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
       type: "constant"
     }
   }
+}
+
+
+layer {
+  name: "Sigmoid2"
+  type: "Sigmoid"
+  bottom: "conv2"
+  top: "Sigmoid2"
 }
 layer {
   name: "pool2"
   type: "Pooling"
-  bottom: "conv2"
+  bottom: "Sigmoid2"
   top: "pool2"
   pooling_param {
-    pool: MAX
-    kernel_size: 2
+    pool: AVE
+    kernel_size: 3
     stride: 2
   }
 }
 layer {
-  name: "ip1"
-  type: "InnerProduct"
+  name: "conv3"
+  type: "Convolution"
   bottom: "pool2"
-  top: "ip1"
-  param {
-    lr_mult: 1
-  }
-  param {
-    lr_mult: 2
-  }
-  inner_product_param {
-    num_output: 500
+  top: "conv3"
+  convolution_param {
+    num_output: 64
+    pad: 2
+    kernel_size: 5
+    stride: 1
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
       type: "constant"
     }
   }
-}
-layer {
-  name: "relu1"
-  type: "ReLU"
-  bottom: "ip1"
-  top: "ip1"
-}
-layer {
-  name: "ip2"
-  type: "InnerProduct"
-  bottom: "ip1"
-  top: "ip2"
   param {
     lr_mult: 1
   }
   param {
+    lr_mult: 1
+  }
+
+}
+
+layer {
+  name: "Sigmoid3"
+  type: "Sigmoid"
+  bottom: "conv3"
+  top: "Sigmoid3"
+}
+
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "Sigmoid3"
+  top: "pool3"
+  pooling_param {
+    pool: AVE
+    kernel_size: 3
+    stride: 2
+  }
+}
+
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "pool3"
+  top: "ip1"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
     lr_mult: 2
-    #decay_mult: 1.0
-    #kernel_shape_decay_mult: 0.0
-    #breadth_decay_mult: 0.0
+    decay_mult: 0
   }
   inner_product_param {
     num_output: 10
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.01
     }
     bias_filler {
       type: "constant"
@@ -158,7 +196,7 @@ layer {
 layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "ip2"
+  bottom: "ip1"
   bottom: "label"
   top: "accuracy"
   include {
@@ -168,7 +206,7 @@ layer {
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
-  bottom: "ip2"
+  bottom: "ip1"
   bottom: "label"
   top: "loss"
 }

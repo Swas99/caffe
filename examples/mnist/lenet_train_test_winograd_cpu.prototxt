@@ -1,4 +1,4 @@
-name: "LeNet_MNIST_Winograd"
+name: "LeNet_MNIST_Winograd_CPU"
 layer {
   name: "mnist"
   type: "Data"

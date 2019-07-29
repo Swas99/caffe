@@ -1,4 +1,4 @@
-name: "CIFAR10_full"
+name: "CIFAR10-FT_CIFAR10_Winograd_CPU"
 layer {
   name: "cifar"
   type: "Data"
@@ -35,21 +35,17 @@ layer {
 }
 layer {
   name: "conv1"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "data"
   top: "conv1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
   }
   param {
     lr_mult: 2
     decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
@@ -96,21 +92,17 @@ layer {
 }
 layer {
   name: "conv2"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "norm1"
   top: "conv2"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
   }
   param {
     lr_mult: 2
     decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
@@ -157,21 +149,17 @@ layer {
 }
 layer {
   name: "conv3"
-  type: "Convolution"
+  type: "Winograd"
   bottom: "norm2"
   top: "conv3"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
   }
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 64
@@ -209,18 +197,13 @@ layer {
   type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 0
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   param {
     lr_mult: 2
     decay_mult: 0
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   inner_product_param {
     num_output: 10

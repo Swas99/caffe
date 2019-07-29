@@ -1,4 +1,4 @@
-name: "CIFAR10_full"
+name: "CIFAR10-FT_CIFAR10_Winograd_GPU"
 layer {
   name: "cifar"
   type: "Data"
@@ -38,11 +38,10 @@ layer {
   type: "Winograd"
   bottom: "data"
   top: "conv1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    regularization_type: "L1"
   }
   param {
     lr_mult: 2
@@ -96,11 +95,10 @@ layer {
   type: "Winograd"
   bottom: "norm1"
   top: "conv2"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    regularization_type: "L1"
   }
   param {
     lr_mult: 2
@@ -154,11 +152,10 @@ layer {
   type: "Winograd"
   bottom: "norm2"
   top: "conv3"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
     decay_mult: 1
-    regularization_type: "L1"
   }
   param {
     lr_mult: 1
@@ -200,17 +197,13 @@ layer {
   type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
-    decay_mult: 1
-    #decay_mult: 250
-    regularization_type: "L1"
+    decay_mult: 0
   }
   param {
     lr_mult: 2
-    #decay_mult: 0
-    decay_mult: 1
+    decay_mult: 0
   }
   inner_product_param {
     num_output: 10
@@ -224,15 +217,15 @@ layer {
   }
 }
 
-#layer {
-  #name: "drop1"
-  #type: "Dropout"
-  #bottom: "ip1"
-  #top: "ip1"
-  #dropout_param {
-    #dropout_ratio: 0.5
-  #}
-#}
+layer {
+  name: "drop1"
+  type: "Dropout"
+  bottom: "ip1"
+  top: "ip1"
+  dropout_param {
+    dropout_ratio: 0.5
+  }
+}
 
 layer {
   name: "accuracy"

@@ -1,4 +1,4 @@
-name: "CIFAR10_full"
+name: "CIFAR10-SIGMOID-BN_CIFAR10_Spatial_GPU"
 layer {
   name: "cifar"
   type: "Data"
@@ -29,39 +29,27 @@ layer {
   }
   data_param {
     source: "examples/cifar10/cifar10_test_lmdb"
-    batch_size: 100
+    batch_size: 1000
     backend: LMDB
   }
 }
 layer {
   name: "conv1"
-  type: "Winograd"
+  type: "Convolution"
   bottom: "data"
   top: "conv1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
-    decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.0001
-    }
-    bias_filler {
-      type: "constant"
     }
   }
 }
@@ -76,66 +64,77 @@ layer {
     stride: 2
   }
 }
+
 layer {
-  name: "relu1"
-  type: "ReLU"
+  name: "bn1"
+  type: "BatchNorm"
   bottom: "pool1"
-  top: "pool1"
-}
-layer {
-  name: "norm1"
-  type: "LRN"
-  bottom: "pool1"
-  top: "norm1"
-  lrn_param {
-    local_size: 3
-    alpha: 5e-05
-    beta: 0.75
-    norm_region: WITHIN_CHANNEL
+  top: "bn1"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
   }
 }
+
+layer {
+  name: "Sigmoid1"
+  type: "Sigmoid"
+  bottom: "bn1"
+  top: "Sigmoid1"
+}
+
 layer {
   name: "conv2"
-  type: "Winograd"
-  bottom: "norm1"
+  type: "Convolution"
+  bottom: "Sigmoid1"
   top: "conv2"
-  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
-    decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 32
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
+
 layer {
-  name: "relu2"
-  type: "ReLU"
+  name: "bn2"
+  type: "BatchNorm"
   bottom: "conv2"
-  top: "conv2"
+  top: "bn2"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
+layer {
+  name: "Sigmoid2"
+  type: "Sigmoid"
+  bottom: "bn2"
+  top: "Sigmoid2"
 }
 layer {
   name: "pool2"
   type: "Pooling"
-  bottom: "conv2"
+  bottom: "Sigmoid2"
   top: "pool2"
   pooling_param {
     pool: AVE
@@ -144,59 +143,52 @@ layer {
   }
 }
 layer {
-  name: "norm2"
-  type: "LRN"
-  bottom: "pool2"
-  top: "norm2"
-  lrn_param {
-    local_size: 3
-    alpha: 5e-05
-    beta: 0.75
-    norm_region: WITHIN_CHANNEL
-  }
-}
-layer {
   name: "conv3"
-  type: "Winograd"
-  bottom: "norm2"
+  type: "Convolution"
+  bottom: "pool2"
   top: "conv3"
-  #connectivity_mode: DISCONNECTED_GRPWISE
   param {
     lr_mult: 1
-    decay_mult: 1
-    kernel_shape_decay_mult: 1
-    breadth_decay_mult: 1
-  }
-  param {
-    lr_mult: 1
-    decay_mult: 1
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   convolution_param {
     num_output: 64
     pad: 2
     kernel_size: 5
     stride: 1
+    bias_term: false
     weight_filler {
       type: "gaussian"
       std: 0.01
     }
-    bias_filler {
-      type: "constant"
-    }
   }
 }
+
 layer {
-  name: "relu3"
-  type: "ReLU"
+  name: "bn3"
+  type: "BatchNorm"
   bottom: "conv3"
-  top: "conv3"
+  top: "bn3"
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+  param {
+    lr_mult: 0
+  }
+}
+
+layer {
+  name: "Sigmoid3"
+  type: "Sigmoid"
+  bottom: "bn3"
+  top: "Sigmoid3"
 }
 layer {
   name: "pool3"
   type: "Pooling"
-  bottom: "conv3"
+  bottom: "Sigmoid3"
   top: "pool3"
   pooling_param {
     pool: AVE
@@ -204,23 +196,19 @@ layer {
     stride: 2
   }
 }
+
 layer {
   name: "ip1"
   type: "InnerProduct"
   bottom: "pool3"
   top: "ip1"
-  #connectivity_mode: DISCONNECTED_GRPWISE
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
   param {
     lr_mult: 1
     decay_mult: 0
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
-  }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-    kernel_shape_decay_mult: 0
-    breadth_decay_mult: 0
   }
   inner_product_param {
     num_output: 10
@@ -233,17 +221,6 @@ layer {
     }
   }
 }
-
-layer {
-  name: "drop1"
-  type: "Dropout"
-  bottom: "ip1"
-  top: "ip1"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
-}
-
 layer {
   name: "accuracy"
   type: "Accuracy"
@@ -254,7 +231,6 @@ layer {
     phase: TEST
   }
 }
-
 layer {
   name: "loss"
   type: "SoftmaxWithLoss"
