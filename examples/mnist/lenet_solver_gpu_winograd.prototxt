@@ -26,4 +26,4 @@ snapshot: 10000
 #snapshot_prefix: "examples/mnist/lenet"
 # solver mode: CPU or GPU
 solver_mode: GPU
-snapshot_prefix: "examples/mnist/mlp_500_300_g_w"
+snapshot_prefix: "examples/mnist/mnist_gpu_winograd"
