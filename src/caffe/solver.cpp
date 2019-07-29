@@ -435,7 +435,7 @@ void Solver<Dtype>::Test(const int test_net_id) {
               << mean_score << loss_msg_stream.str();
     if(output_name.compare("accuracy") == 0)
     {
-      // logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(mean_score));
+      logProgressToFile(net_->name(),caffe::format_int(iter_), boost::lexical_cast<std::string>(mean_score));
     }
 
   }
