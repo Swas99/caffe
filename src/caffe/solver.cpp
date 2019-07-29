@@ -464,6 +464,8 @@ std::vector<std::string> split(const std::string &s, char delim) {
 template <typename Dtype>
 void Solver<Dtype>::logProgressToFile(string netName, string iter, string accuracy) {
 
+    string row;
+    string filePath;
     try
     {
       vector<string> temp = split(param_.snapshot_prefix(), '/');
@@ -480,9 +482,9 @@ void Solver<Dtype>::logProgressToFile(string netName, string iter, string accura
 
       using namespace std::chrono;
       milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
-      string row = dataSet + "," + net + "," + machine + "," + domain + "," 
+      row = dataSet + "," + net + "," + machine + "," + domain + "," 
                   + iter + "," + accuracy + "," + std::to_string(ms.count()) + "\n";
-      string filePath = "results/" + fileName;
+      filePath = "results/" + fileName;
 
       std::ofstream outfile;
       outfile.open(filePath, std::ios_base::app);
