@@ -1,4 +1,4 @@
-name: "VGG_CIFAR10_Spatial_GPU"
+name: "VGG_CIFAR10_Winograd_GPU"
 layer {
   name: "data"
   type: "Data"
@@ -41,7 +41,7 @@ layer {
   bottom: "data"
   top: "conv1_1"
   name: "conv1_1"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -88,7 +88,7 @@ layer {
   bottom: "conv1_1"
   top: "conv1_2"
   name: "conv1_2"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -146,7 +146,7 @@ layer {
   bottom: "pool1"
   top: "conv2_1"
   name: "conv2_1"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -193,7 +193,7 @@ layer {
   bottom: "conv2_1"
   top: "conv2_2"
   name: "conv2_2"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -251,7 +251,7 @@ layer {
   bottom: "pool2"
   top: "conv3_1"
   name: "conv3_1"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -298,7 +298,7 @@ layer {
   bottom: "conv3_1"
   top: "conv3_2"
   name: "conv3_2"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -345,7 +345,7 @@ layer {
   bottom: "conv3_2"
   top: "conv3_3"
   name: "conv3_3"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -403,7 +403,7 @@ layer {
   bottom: "pool3"
   top: "conv4_1"
   name: "conv4_1"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -450,7 +450,7 @@ layer {
   bottom: "conv4_1"
   top: "conv4_2"
   name: "conv4_2"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -497,7 +497,7 @@ layer {
   bottom: "conv4_2"
   top: "conv4_3"
   name: "conv4_3"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -555,7 +555,7 @@ layer {
   bottom: "pool4"
   top: "conv5_1"
   name: "conv5_1"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -602,7 +602,7 @@ layer {
   bottom: "conv5_1"
   top: "conv5_2"
   name: "conv5_2"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"
@@ -649,7 +649,7 @@ layer {
   bottom: "conv5_2"
   top: "conv5_3"
   name: "conv5_3"
-  type: "Convolution"
+  type: "Winograd"
   convolution_param {
     weight_filler {
       type: "msra"

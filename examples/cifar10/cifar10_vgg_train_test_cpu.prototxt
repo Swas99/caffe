@@ -1,4 +1,4 @@
-name: "VGG_CIFAR10_Spatial_GPU"
+name: "VGG_CIFAR10_Spatial_CPU"
 layer {
   name: "data"
   type: "Data"

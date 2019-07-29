@@ -8,9 +8,9 @@ gamma: 0.1
 momentum: 0.9
 weight_decay: 0.0001
 snapshot: 10000
-snapshot_prefix: "examples/cifar10/cifar10_vgg_gpu_"
-solver_mode: GPU
-net: "examples/cifar10/cifar10_vgg_train_test_gpu.prototxt"
+snapshot_prefix: "examples/cifar10/cifar10_vgg_cpu_"
+solver_mode: CPU
+net: "examples/cifar10/cifar10_vgg_train_test_cpu.prototxt"
 test_initialization: false
 stepvalue: 32000
 stepvalue: 48000
