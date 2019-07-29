@@ -462,8 +462,15 @@ void Solver<Dtype>::logProgressToFile(string netName, string iter, string accura
 
     vector<string> temp = split(param_.snapshot_prefix(), '/');
     //examples/cifar10/cifar10_full_lr1_cpu
+    size_t found = temp[2].find("CPU"); 
+    if (found != string::npos)
+    {
+      found = temp[2].find("Winograd"); 
+        if (found != string::npos)
+          return;
+    }
+
     string fileName = temp[2] + ".csv";
-    
     //KERNAL-SHAPE_CIFAR10_Winograd_CPU
     temp = split(netName, '_');
     string net = temp[0];
