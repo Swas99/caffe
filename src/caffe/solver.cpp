@@ -477,7 +477,7 @@ void Solver<Dtype>::logProgressToFile(string netName, string iter, string accura
     milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
     string row = dataSet + "," + net + "," + machine + "," + domain + "," 
                 + iter + "," + accuracy + "," + std::to_string(ms.count()) + "\n";
-    string filePath = "results/" + fileName;
+    string filePath = "results\\" + fileName;
 
     std::ofstream outfile;
     outfile.open(filePath, std::ios_base::app);
