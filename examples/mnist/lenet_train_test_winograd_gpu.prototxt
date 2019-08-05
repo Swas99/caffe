@@ -46,7 +46,7 @@ layer {
   }
   convolution_param {
     num_output: 20
-    kernel_size: 2
+    kernel_size: 3
     stride: 1
     weight_filler {
       type: "xavier"
@@ -83,7 +83,7 @@ layer {
   }
   convolution_param {
     num_output: 50
-    kernel_size: 2
+    kernel_size: 3
     stride: 1
     weight_filler {
       type: "xavier"
