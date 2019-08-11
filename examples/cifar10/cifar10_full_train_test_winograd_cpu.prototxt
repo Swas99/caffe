@@ -39,11 +39,7 @@ layer {
   bottom: "data"
   top: "conv1"
   #connectivity_mode: DISCONNECTED_GRPWISE
-  param {
-    lr_mult: 1
-    decay_mult: 1
-    regularization_type: "L1"
-  }
+
   param {
     lr_mult: 2
     decay_mult: 1
@@ -97,11 +93,7 @@ layer {
   bottom: "norm1"
   top: "conv2"
   #connectivity_mode: DISCONNECTED_GRPWISE
-  param {
-    lr_mult: 1
-    decay_mult: 1
-    regularization_type: "L1"
-  }
+  
   param {
     lr_mult: 2
     decay_mult: 1
@@ -155,11 +147,7 @@ layer {
   bottom: "norm2"
   top: "conv3"
   #connectivity_mode: DISCONNECTED_GRPWISE
-  param {
-    lr_mult: 1
-    decay_mult: 1
-    regularization_type: "L1"
-  }
+  
   param {
     lr_mult: 1
     decay_mult: 1
@@ -201,12 +189,7 @@ layer {
   bottom: "pool3"
   top: "ip1"
   #connectivity_mode: DISCONNECTED_GRPWISE
-  param {
-    lr_mult: 1
-    decay_mult: 1
-    #decay_mult: 250
-    regularization_type: "L1"
-  }
+  
   param {
     lr_mult: 2
     #decay_mult: 0
